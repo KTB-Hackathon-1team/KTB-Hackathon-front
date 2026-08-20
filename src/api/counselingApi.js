@@ -19,6 +19,12 @@ export function getCounselingSessionDetail(childProfileId, sessionId) {
   return apiRequest(counselingDetailKey(childProfileId, sessionId));
 }
 
+export function deleteCounselingSession(childProfileId, sessionId) {
+  return apiRequest(counselingDetailKey(childProfileId, sessionId), {
+    method: "DELETE",
+  });
+}
+
 export function startCounselingSession(childProfileId, sessionId) {
   return apiRequest(`${counselingDetailKey(childProfileId, sessionId)}/start`, {
     method: "POST",

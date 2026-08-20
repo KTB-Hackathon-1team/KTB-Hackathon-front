@@ -4,13 +4,15 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpenText,
-  ChevronRight,
   Compass,
+  Ellipsis,
   Home,
   MessageCircleHeart,
   NotebookTabs,
   Plus,
+  Trash2,
 } from "lucide-react";
+import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import { Link, useNavigate, useParams } from "react-router";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
@@ -19,6 +21,7 @@ import { CHILDREN_KEY } from "@/api/childrenApi";
 import {
   counselingSessionsKey,
   createCounselingSession,
+  deleteCounselingSession,
 } from "@/api/counselingApi";
 import { Brand } from "@/components/Brand";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
@@ -54,6 +57,9 @@ export function CounselingBoardPage() {
   const { selectChild } = useChild();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createError, setCreateError] = useState("");
+  const [deletingSession, setDeletingSession] = useState(null);
+  const [isDeletingSession, setIsDeletingSession] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const {
     data: children,
@@ -120,6 +126,21 @@ export function CounselingBoardPage() {
       setCreateError(getErrorMessage(error));
     }
   }, [childProfileId, createSession, mutateSessions, navigate]);
+
+  const handleDelete = useCallback(async () => {
+    if (!deletingSession) return;
+    setDeleteError("");
+    setIsDeletingSession(true);
+    try {
+      await deleteCounselingSession(childProfileId, deletingSession.id);
+      await mutateSessions();
+      setDeletingSession(null);
+    } catch (error) {
+      setDeleteError(getErrorMessage(error));
+    } finally {
+      setIsDeletingSession(false);
+    }
+  }, [childProfileId, deletingSession, mutateSessions]);
 
   if (!isValidChildId) {
     return <InvalidChildState message="올바르지 않은 아이 주소입니다." />;
@@ -228,26 +249,57 @@ export function CounselingBoardPage() {
               ) : sessions.length ? (
                 <div className="session-list">
                   {sessions.map((session) => (
-                    <Link
-                      key={session.id}
-                      to={`/children/${childProfileId}/counseling/${session.id}`}
-                      className="session-list__link"
-                    >
-                      <Card className="session-card">
-                        <CardContent>
-                          <span className="session-card__icon"><BookOpenText /></span>
-                          <span className="session-card__body">
-                            <span className="session-card__date">{formatDate(session.date)}</span>
-                            <strong>{session.title}</strong>
-                            <span className="session-card__summary">{session.content}</span>
-                          </span>
-                          <span className="session-card__action">
-                            <span>기록 보기</span>
-                            <ChevronRight />
-                          </span>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                    <div className="session-list__item" key={session.id}>
+                      <Link
+                        to={`/children/${childProfileId}/counseling/${session.id}`}
+                        className="session-list__link"
+                      >
+                        <Card className="session-card">
+                          <CardContent>
+                            <span className="session-card__icon"><BookOpenText /></span>
+                            <span className="session-card__body">
+                              <span className="session-card__date">{formatDate(session.date)}</span>
+                              <strong>{session.title}</strong>
+                              <span className="session-card__summary">{session.content}</span>
+                            </span>
+                            <span className="session-card__action">
+                              <span>기록 보기</span>
+                            </span>
+                          </CardContent>
+                        </Card>
+                      </Link>
+
+                      <DropdownMenuPrimitive.Root>
+                        <DropdownMenuPrimitive.Trigger asChild>
+                          <Button
+                            className="session-card__menu"
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`${session.title} 상담 기록 관리`}
+                          >
+                            <Ellipsis />
+                          </Button>
+                        </DropdownMenuPrimitive.Trigger>
+                        <DropdownMenuPrimitive.Portal>
+                          <DropdownMenuPrimitive.Content
+                            className="session-menu"
+                            align="end"
+                            sideOffset={6}
+                          >
+                            <DropdownMenuPrimitive.Item
+                              className="session-menu__item"
+                              onSelect={() => {
+                                setDeleteError("");
+                                setDeletingSession(session);
+                              }}
+                            >
+                              <Trash2 /> 삭제
+                            </DropdownMenuPrimitive.Item>
+                          </DropdownMenuPrimitive.Content>
+                        </DropdownMenuPrimitive.Portal>
+                      </DropdownMenuPrimitive.Root>
+                    </div>
                   ))}
                 </div>
               ) : !sessionsError ? (
@@ -336,6 +388,49 @@ export function CounselingBoardPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(deletingSession)}
+        onOpenChange={(open) => {
+          if (!open && !isDeletingSession) setDeletingSession(null);
+        }}
+      >
+        <DialogContent className="counseling-delete-dialog" showCloseButton={!isDeletingSession}>
+          <DialogHeader>
+            <span className="counseling-dialog__eyebrow">상담 기록 관리</span>
+            <DialogTitle className="counseling-dialog__title">상담 기록 삭제</DialogTitle>
+            <DialogDescription>
+              ‘{deletingSession?.title}’ 기록과 연결된 대화, 분석 결과, 녹음 정보가 모두 삭제되며 되돌릴 수 없어요.
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteError && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeletingSession}
+              onClick={() => setDeletingSession(null)}
+            >
+              취소
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeletingSession}
+              onClick={() => void handleDelete()}
+            >
+              <Trash2 /> {isDeletingSession ? "삭제하는 중..." : "삭제하기"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </main>

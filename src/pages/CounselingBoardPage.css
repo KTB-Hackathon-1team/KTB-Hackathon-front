@@ -152,6 +152,10 @@
   margin-top: 1.25rem;
 }
 
+.session-list__item {
+  position: relative;
+}
+
 .session-list__link {
   display: block;
   border-radius: var(--radius-xl);
@@ -181,7 +185,54 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
+  padding: 1rem 4rem 1rem 1rem;
+}
+
+.session-card__menu {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 1rem;
+  translate: 0 -50%;
+  border-radius: 999px;
+  color: #79685f;
+}
+
+.session-card__menu:hover,
+.session-card__menu[data-state="open"] {
+  background: #f5eee9;
+  color: #5f3525;
+}
+
+.session-menu {
+  z-index: 60;
+  min-width: 8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  background: var(--popover);
+  box-shadow: var(--shadow-md);
+}
+
+.session-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 0.75rem;
+  outline: none;
+  color: var(--destructive);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.session-menu__item svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.session-menu__item[data-highlighted] {
+  background: rgb(196 63 82 / 0.1);
 }
 
 .session-card__icon {
@@ -201,8 +252,6 @@
 .session-card__summary { display: none; margin-top: 0.25rem; overflow: hidden; color: #79685f; font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
 .session-card__action { display: flex; align-items: center; gap: 0.25rem; color: #865039; font-size: 0.75rem; font-weight: 600; }
 .session-card__action > span { display: none; }
-.session-card__action svg { width: 1rem; height: 1rem; transition: transform var(--transition); }
-.session-list__link:hover .session-card__action svg { transform: translateX(0.125rem); }
 
 .session-empty {
   margin-top: 1.25rem;
@@ -258,6 +307,11 @@
 
 .counseling-dialog {
   border-color: #eadfd8;
+  background: #fffdfb;
+}
+
+.counseling-delete-dialog {
+  border-color: #f0cbd1;
   background: #fffdfb;
 }
 
@@ -334,7 +388,7 @@
   }
 
   .new-counseling-card__icon svg { width: 2.5rem; height: 2.5rem; }
-  .session-card .ui-card__content { padding: 1.25rem; }
+  .session-card .ui-card__content { padding: 1.25rem 4.25rem 1.25rem 1.25rem; }
   .session-card__body strong { font-size: 1rem; }
   .session-card__summary,
   .session-card__action > span { display: block; }
