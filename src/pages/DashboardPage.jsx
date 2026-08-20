@@ -583,19 +583,34 @@ export function DashboardPage() {
                 control={editControl}
                 rules={{ required: "성별을 선택해 주세요." }}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger
-                      className="child-form__select"
-                      aria-invalid={Boolean(editErrors.gender)}
+                  <div
+                    className="child-form__gender-options"
+                    role="radiogroup"
+                    aria-label="성별"
+                    aria-invalid={Boolean(editErrors.gender)}
+                  >
+                    <button
+                      type="button"
+                      className="child-form__gender-option child-form__gender-option--male"
+                      role="radio"
+                      aria-checked={field.value === "MALE"}
                       ref={field.ref}
+                      onClick={() => field.onChange("MALE")}
                     >
-                      <SelectValue placeholder="선택해 주세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MALE">남아</SelectItem>
-                      <SelectItem value="FEMALE">여아</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <Mars aria-hidden="true" />
+                      <span>남아</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="child-form__gender-option child-form__gender-option--female"
+                      role="radio"
+                      aria-checked={field.value === "FEMALE"}
+                      onClick={() => field.onChange("FEMALE")}
+                    >
+                      <Venus aria-hidden="true" />
+                      <span>여아</span>
+                    </button>
+                  </div>
                 )}
               />
               {editErrors.gender && <p className="form-field__error">{editErrors.gender.message}</p>}
