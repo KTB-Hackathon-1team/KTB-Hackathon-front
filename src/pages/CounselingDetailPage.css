@@ -174,3 +174,36 @@
 .counseling-detail-page__action .ui-button {
   justify-content: center;
 }
+
+.conversation-log {
+  margin-top: 2rem;
+}
+
+.conversation-log > h2 {
+  font-size: 1.25rem;
+}
+
+.conversation-log__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  list-style: none;
+}
+
+.conversation-log__item {
+  border: 1px solid #eadfd8;
+  border-radius: var(--radius-xl);
+  background: white;
+  padding: 1rem 1.25rem;
+}
+
+.conversation-log__question {
+  color: #342721;
+  font-weight: 600;
+}
+
+.conversation-log__answer {
+  margin-top: 0.5rem;
+  color: #79685f;
+}
