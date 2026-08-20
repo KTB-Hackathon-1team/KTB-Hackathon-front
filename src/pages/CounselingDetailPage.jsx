@@ -1,11 +1,13 @@
-import { ArrowLeft, Brain, Heart, Lightbulb, LoaderCircle } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { useState } from "react";
+import { ArrowLeft, ArrowRight, Brain, Heart, Lightbulb, LoaderCircle } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router";
 import useSWR from "swr";
-import { counselingDetailKey } from "@/api/counselingApi";
+import { counselingDetailKey, startCounselingSession } from "@/api/counselingApi";
 import { Brand } from "@/components/Brand";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { getErrorMessage } from "@/utils/errors";
 import "./CounselingDetailPage.css";
 
 const statusLabels = {
@@ -18,6 +20,7 @@ const statusLabels = {
 };
 
 export function CounselingDetailPage() {
+  const navigate = useNavigate();
   const { childId, sessionId } = useParams();
   const childProfileId = Number(childId);
   const counselingSessionId = Number(sessionId);
@@ -28,6 +31,23 @@ export function CounselingDetailPage() {
     counselingSessionId > 0;
   const detailKey = isValid ? counselingDetailKey(childProfileId, counselingSessionId) : null;
   const { data, error, isLoading } = useSWR(detailKey);
+  const [isStarting, setIsStarting] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const talkPath = `/children/${childProfileId}/counseling/${counselingSessionId}/talk`;
+
+  async function handleStart() {
+    setActionError("");
+    setIsStarting(true);
+
+    try {
+      await startCounselingSession(childProfileId, counselingSessionId);
+      navigate(talkPath);
+    } catch (caught) {
+      setActionError(getErrorMessage(caught));
+    } finally {
+      setIsStarting(false);
+    }
+  }
 
   return (
     <main className="counseling-detail-page">
@@ -59,6 +79,41 @@ export function CounselingDetailPage() {
               <CardHeader><CardTitle>부모님이 남긴 상황</CardTitle></CardHeader>
               <CardContent><p>{data.content}</p></CardContent>
             </Card>
+
+            {(data.status === "DRAFT" || data.status === "FAILED" || data.status === "RECORDING") && (
+              <Card className="counseling-detail-page__action">
+                <CardContent>
+                  <div>
+                    <strong>
+                      {data.status === "RECORDING"
+                        ? "아이와의 대화가 진행 중이에요"
+                        : data.status === "FAILED"
+                          ? "상담을 다시 시작할 수 있어요"
+                          : "이제 아이와 대화를 시작해 보세요"}
+                    </strong>
+                    <p>
+                      {data.status === "RECORDING"
+                        ? "음성 화면으로 돌아가 대화를 이어갈 수 있어요."
+                        : "음성 화면에서 코코아가 아이의 이야기를 차분히 이끌어 줄게요."}
+                    </p>
+                    {actionError && <span className="counseling-detail-page__action-error">{actionError}</span>}
+                  </div>
+                  <Button
+                    onClick={data.status === "RECORDING" ? () => navigate(talkPath) : () => void handleStart()}
+                    disabled={isStarting}
+                  >
+                    {isStarting
+                      ? "상담 준비 중..."
+                      : data.status === "RECORDING"
+                        ? "대화로 돌아가기"
+                        : data.status === "FAILED"
+                          ? "다시 상담하기"
+                          : "상담 자세히 보기"}
+                    <ArrowRight />
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {data.analysisReport ? (
               <section className="analysis-report" aria-labelledby="analysis-title">

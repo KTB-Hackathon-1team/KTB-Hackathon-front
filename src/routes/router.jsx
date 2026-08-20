@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Navigate, Outlet, createBrowserRouter } from "react-router";
 import { CounselingBoardPage } from "@/pages/CounselingBoardPage";
 import { CounselingDetailPage } from "@/pages/CounselingDetailPage";
@@ -12,18 +11,19 @@ function RouteLoading({ message = "로그인 상태를 확인하는 중..." }) {
 }
 
 function RootGate() {
-  const { user, isRestoring, restoreSession } = useAuth();
-
-  useEffect(() => {
-    restoreSession().catch(() => undefined);
-  }, [restoreSession]);
+  const { user, isRestoring } = useAuth();
 
   if (isRestoring) return <RouteLoading />;
   return <Navigate to={user ? "/dashboard" : "/login"} replace />;
 }
 
 function PublicOnlyRoute() {
-  const { user } = useAuth();
+  const { user, isRestoring } = useAuth();
+
+  if (isRestoring) {
+    return <RouteLoading />;
+  }
+
   return user ? <Navigate to="/dashboard" replace /> : <Outlet />;
 }
 
@@ -58,7 +58,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/dashboard", element: <DashboardPage /> },
       {
-        path: "/talk",
+        path: "/children/:childId/counseling/:sessionId/talk",
         lazy: () => import("@/pages/VoiceTalkPage").then(({ VoiceTalkPage: Component }) => ({ Component })),
       },
       { path: "/children/:childId/counseling", element: <CounselingBoardPage /> },

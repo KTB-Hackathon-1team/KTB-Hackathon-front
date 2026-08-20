@@ -78,6 +78,34 @@
   white-space: pre-wrap;
 }
 
+.counseling-detail-page__action {
+  margin-top: 1rem;
+  border: 1px solid #ecd9cd;
+  background: #fff7f1;
+  box-shadow: none;
+}
+
+.counseling-detail-page__action .ui-card__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.counseling-detail-page__action p {
+  margin-top: 0.35rem;
+  color: #79685f;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+.counseling-detail-page__action-error {
+  display: block;
+  margin-top: 0.5rem;
+  color: #b34f45;
+  font-size: 0.8125rem;
+}
+
 .analysis-report {
   margin-top: 2rem;
 }
@@ -142,6 +170,17 @@
   .counseling-detail-page__topbar { padding: 0 1.75rem; }
   .counseling-detail-page__content { padding: 2rem 1.75rem; }
   .counseling-detail-page__heading h1 { font-size: 2.25rem; }
+}
+
+@media (max-width: 639px) {
+  .counseling-detail-page__action .ui-card__content {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .counseling-detail-page__action .ui-button {
+    justify-content: center;
+  }
 }
 
 @media (min-width: 768px) {

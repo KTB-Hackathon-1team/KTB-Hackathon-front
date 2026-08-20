@@ -8,7 +8,7 @@ import {
   CHILD_AGENT_INSTRUCTIONS,
   CHILD_AGENT_MODEL,
   childAgentCallConfig,
-  issueBrowserRealtimeKey,
+  requestRealtimeClientSecret,
 } from "@/api/voiceApi";
 import { openChildMicrophone, openNearbySpeechInput } from "@/utils/voiceUtils";
 
@@ -46,19 +46,13 @@ export function useChildVoiceCall() {
   useEffect(() => () => endCall(), [endCall]);
 
   const startCall = useCallback(async () => {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY?.trim();
-    if (!apiKey) {
-      setError("VITE_OPENAI_API_KEY가 필요합니다.");
-      setStatus("error");
-      return;
-    }
-
     endCall();
     setError(null);
     setHistory([]);
     setStatus("connecting");
 
     try {
+      const { clientSecret } = await requestRealtimeClientSecret();
       const audio = document.createElement("audio");
       audio.autoplay = true;
       audio.setAttribute("playsinline", "true");
@@ -90,7 +84,7 @@ export function useChildVoiceCall() {
       });
       sessionRef.current = session;
 
-      await session.connect({ apiKey: await issueBrowserRealtimeKey(apiKey) });
+      await session.connect({ apiKey: clientSecret });
       setStatus((current) => (current === "speaking" ? current : "connected"));
     } catch (caught) {
       sessionRef.current?.close();

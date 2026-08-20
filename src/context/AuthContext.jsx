@@ -47,6 +47,10 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  useEffect(() => {
+    restoreSession().catch(() => undefined);
+  }, [restoreSession]);
+
   const login = useCallback(async (loginId, password) => {
     const session = await loginRequest(loginId, password);
     applySession(session);
