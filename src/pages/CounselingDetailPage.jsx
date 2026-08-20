@@ -219,9 +219,9 @@ function buildQaPairs(turns = []) {
   let pendingQuestion = null;
 
   for (const turn of turns) {
-    if (turn.role === "user") {
+    if (turn.role === "assistant") {
       pendingQuestion = turn.text;
-    } else if (turn.role === "assistant" && pendingQuestion !== null) {
+    } else if (turn.role === "user" && pendingQuestion !== null) {
       pairs.push({ question: pendingQuestion, answer: turn.text });
       pendingQuestion = null;
     }
