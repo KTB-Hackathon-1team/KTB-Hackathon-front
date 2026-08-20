@@ -370,7 +370,7 @@ export function CounselingBoardPage() {
             </DialogFooter>
           </form>
         </DialogContent>
-      </Dialog>
+      </CounselingCreateModal>
 
       <Dialog
         open={Boolean(deletingSession)}
