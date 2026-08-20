@@ -1,0 +1,18 @@
+.child-delete-dialog {
+  border-color: #f0cbd1;
+  background: #fffdfb;
+}
+
+.child-delete-dialog__eyebrow {
+  color: #a8623e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.child-delete-dialog__title {
+  color: #342721;
+  font-size: 1.875rem;
+  letter-spacing: -0.05em;
+}

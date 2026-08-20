@@ -34,6 +34,8 @@ export function CounselingDetailPage() {
   const [isStarting, setIsStarting] = useState(false);
   const [actionError, setActionError] = useState("");
   const talkPath = `/children/${childProfileId}/counseling/${counselingSessionId}/talk`;
+  const isCompleted = data?.status === "COMPLETED";
+  const analysisReport = isCompleted ? data.analysisReport : null;
 
   async function handleStart() {
     setActionError("");
@@ -115,16 +117,16 @@ export function CounselingDetailPage() {
               </Card>
             )}
 
-            {data.analysisReport ? (
+            {analysisReport ? (
               <section className="analysis-report" aria-labelledby="analysis-title">
                 <h2 id="analysis-title">코코아의 마음 리포트</h2>
                 <div className="analysis-report__grid">
-                  <ReportCard icon={<Brain />} title="상황 요약" content={data.analysisReport.summary} />
-                  <ReportCard icon={<Heart />} title="아이의 감정" content={data.analysisReport.emotionSummary} />
-                  <ReportCard icon={<Lightbulb />} title="대화 방향" content={data.analysisReport.parentingGuidance} />
+                  <ReportCard icon={<Brain />} title="상황 요약" content={analysisReport.summary} />
+                  <ReportCard icon={<Heart />} title="아이의 감정" content={analysisReport.emotionSummary} />
+                  <ReportCard icon={<Lightbulb />} title="대화 방향" content={analysisReport.parentingGuidance} />
                 </div>
               </section>
-            ) : (
+            ) : isCompleted ? (
               <Card className="analysis-pending">
                 <CardContent>
                   <span className="analysis-pending__icon"><Brain /></span>
@@ -134,7 +136,7 @@ export function CounselingDetailPage() {
                   </div>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
           </>
         )}
       </section>

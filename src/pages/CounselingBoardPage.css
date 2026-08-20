@@ -281,7 +281,6 @@
 .session-empty__icon svg { width: 1.25rem; height: 1.25rem; }
 .session-empty strong { margin-top: 1rem; }
 .session-empty p { margin-top: 0.5rem; color: #79685f; font-size: 0.875rem; }
-.session-empty .ui-button { margin-top: 1.25rem; }
 .session-section__more { margin-top: 1.25rem; text-align: center; }
 
 .mobile-child-nav {
@@ -436,7 +435,6 @@
   .child-sidebar__nav-item svg { width: 1rem; height: 1rem; }
   .child-sidebar__nav-item--active { border-radius: var(--radius-xl); background: #f1e3da; color: #75432f; font-weight: 600; }
   .child-sidebar__back { justify-content: flex-start; margin-top: auto; color: #79685f; }
-  .counseling-board-mobile-header,
-  .mobile-child-nav { display: none; }
+  .counseling-board-mobile-header { display: none; }
   .counseling-board-content { padding: 3rem 2.5rem; }
 }

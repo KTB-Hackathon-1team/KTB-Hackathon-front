@@ -24,6 +24,8 @@ import {
   deleteCounselingSession,
 } from "@/api/counselingApi";
 import { Brand } from "@/components/Brand";
+import { CounselingCreateModal } from "@/components/modals/CounselingCreateModal";
+import { CounselingDeleteModal } from "@/components/modals/CounselingDeleteModal";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -33,17 +35,6 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/Card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/Dialog";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { Textarea } from "@/components/ui/Textarea";
 import { useChild } from "@/hooks/useChild";
 import { formatDate, getAge } from "@/utils/date";
 import { getErrorMessage } from "@/utils/errors";
@@ -308,9 +299,6 @@ export function CounselingBoardPage() {
                     <span className="session-empty__icon"><NotebookTabs /></span>
                     <strong>아직 상담 기록이 없어요</strong>
                     <p>첫 번째 상황을 남기면 이곳에 기록이 쌓여요.</p>
-                    <Button variant="outline" onClick={() => setIsCreateOpen(true)}>
-                      <Plus /> 첫 이야기 작성하기
-                    </Button>
                   </CardContent>
                 </Card>
               ) : null}
@@ -324,18 +312,11 @@ export function CounselingBoardPage() {
               )}
             </section>
 
-            <nav className="mobile-child-nav" aria-label="모바일 아이 공간 메뉴">
-              <span className="mobile-child-nav__item mobile-child-nav__item--active">
-                <Home />오늘
-              </span>
-              <span className="mobile-child-nav__item"><NotebookTabs />기록</span>
-              <span className="mobile-child-nav__item"><Compass />길잡이</span>
-            </nav>
           </section>
         </div>
       </div>
 
-      <Dialog
+      <CounselingCreateModal
         open={isCreateOpen}
         onOpenChange={(open) => !isMutating && setIsCreateOpen(open)}
       >
