@@ -9,6 +9,7 @@ import {
   Home,
   MessageCircleHeart,
   NotebookTabs,
+  Plus,
   Trash2,
 } from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
@@ -121,7 +122,6 @@ export function CounselingBoardPage() {
     if (!deletingSession) return;
     setDeleteError("");
     setIsDeletingSession(true);
-
     try {
       await deleteCounselingSession(childProfileId, deletingSession.id);
       await mutateSessions();
@@ -279,7 +279,7 @@ export function CounselingBoardPage() {
                             sideOffset={6}
                           >
                             <DropdownMenuPrimitive.Item
-                              className="session-menu__item session-menu__item--destructive"
+                              className="session-menu__item"
                               onSelect={() => {
                                 setDeleteError("");
                                 setDeletingSession(session);
@@ -318,20 +318,102 @@ export function CounselingBoardPage() {
 
       <CounselingCreateModal
         open={isCreateOpen}
-        childName={child.name}
-        isSubmitting={isMutating}
-        error={createError}
-        onSubmit={handleCreate}
-        onClose={() => setIsCreateOpen(false)}
-      />
+        onOpenChange={(open) => !isMutating && setIsCreateOpen(open)}
+      >
+        <DialogContent className="counseling-dialog">
+          <DialogHeader>
+            <span className="counseling-dialog__eyebrow">새로운 상담</span>
+            <DialogTitle className="counseling-dialog__title">어떤 일이 있었나요?</DialogTitle>
+            <DialogDescription>
+              상황을 편하게 적어주시면 {child.name}이에게 맞는 상담을 준비할게요.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="counseling-form" onSubmit={handleCreate}>
+            <div className="form-field">
+              <Label htmlFor="counseling-title">상황 제목</Label>
+              <Input
+                id="counseling-title"
+                name="title"
+                maxLength={200}
+                required
+                placeholder="예: 학원 숙제 때문에 갈등이 생겼어요"
+              />
+            </div>
+            <div className="form-field">
+              <Label htmlFor="counseling-content">자세한 내용</Label>
+              <Textarea
+                id="counseling-content"
+                name="content"
+                required
+                className="counseling-form__textarea"
+                placeholder="오늘 있었던 상황과 서로 나눈 말을 편하게 적어주세요."
+              />
+            </div>
+            {createError && (
+              <Alert variant="destructive">
+                <AlertCircle />
+                <AlertDescription>{createError}</AlertDescription>
+              </Alert>
+            )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isMutating}
+                onClick={() => setIsCreateOpen(false)}
+              >
+                취소
+              </Button>
+              <Button type="submit" disabled={isMutating} className="counseling-form__submit">
+                {isMutating ? "만드는 중..." : "상담 만들기"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-      <CounselingDeleteModal
-        session={deletingSession}
-        isDeleting={isDeletingSession}
-        error={deleteError}
-        onConfirm={() => void handleDelete()}
-        onClose={() => setDeletingSession(null)}
-      />
+      <Dialog
+        open={Boolean(deletingSession)}
+        onOpenChange={(open) => {
+          if (!open && !isDeletingSession) setDeletingSession(null);
+        }}
+      >
+        <DialogContent className="counseling-delete-dialog" showCloseButton={!isDeletingSession}>
+          <DialogHeader>
+            <span className="counseling-dialog__eyebrow">상담 기록 관리</span>
+            <DialogTitle className="counseling-dialog__title">상담 기록 삭제</DialogTitle>
+            <DialogDescription>
+              ‘{deletingSession?.title}’ 기록과 연결된 대화, 분석 결과, 녹음 정보가 모두 삭제되며 되돌릴 수 없어요.
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteError && (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeletingSession}
+              onClick={() => setDeletingSession(null)}
+            >
+              취소
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeletingSession}
+              onClick={() => void handleDelete()}
+            >
+              <Trash2 /> {isDeletingSession ? "삭제하는 중..." : "삭제하기"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
