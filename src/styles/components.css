@@ -318,8 +318,3 @@
 .ui-button.password-field__toggle:hover,
 .ui-button.password-field__toggle:active { background: transparent; }
 .ui-button.password-field__toggle:active { transform: translateY(-50%); }
-
-@media (min-width: 640px) {
-  .ui-dialog__footer { flex-direction: row; justify-content: flex-end; }
-  .ui-textarea { font-size: 0.875rem; }
-}

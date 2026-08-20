@@ -166,27 +166,11 @@
 .analysis-pending__icon { flex-shrink: 0; border-radius: 999px; background: #f3e0d3; }
 .analysis-pending p { margin-top: 0.25rem; color: #79685f; font-size: 0.875rem; line-height: 1.5rem; }
 
-@media (min-width: 640px) {
-  .counseling-detail-page__topbar { padding: 0 1.75rem; }
-  .counseling-detail-page__content { padding: 2rem 1.75rem; }
-  .counseling-detail-page__heading h1 { font-size: 2.25rem; }
+.counseling-detail-page__action .ui-card__content {
+  align-items: stretch;
+  flex-direction: column;
 }
 
-@media (max-width: 639px) {
-  .counseling-detail-page__action .ui-card__content {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .counseling-detail-page__action .ui-button {
-    justify-content: center;
-  }
-}
-
-@media (min-width: 768px) {
-  .analysis-report__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-@media (min-width: 1024px) {
-  .counseling-detail-page__content { padding-top: 3rem; padding-bottom: 3rem; }
+.counseling-detail-page__action .ui-button {
+  justify-content: center;
 }

@@ -311,14 +311,3 @@
 }
 
 .dashboard-page__notice .ui-alert__description { color: #80503b; }
-
-@media (min-width: 640px) {
-  .dashboard-page__content {
-    padding-right: 2rem;
-    padding-left: 2rem;
-  }
-
-  .selection-panel .ui-card__content {
-    flex-direction: row;
-  }
-}
