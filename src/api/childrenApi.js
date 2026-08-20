@@ -13,6 +13,17 @@ export function createChild(input) {
   });
 }
 
+export function updateChild(childProfileId, input) {
+  return apiRequest(`${CHILDREN_KEY}/${childProfileId}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteChild(childProfileId) {
+  return apiRequest(`${CHILDREN_KEY}/${childProfileId}`, { method: "DELETE" });
+}
+
 export function uploadChildProfileImage(childProfileId, file) {
   const formData = new FormData();
   formData.append("file", file);
