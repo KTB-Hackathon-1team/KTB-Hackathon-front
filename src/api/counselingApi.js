@@ -18,3 +18,16 @@ export function createCounselingSession(childProfileId, input) {
 export function getCounselingSessionDetail(childProfileId, sessionId) {
   return apiRequest(counselingDetailKey(childProfileId, sessionId));
 }
+
+export function startCounselingSession(childProfileId, sessionId) {
+  return apiRequest(`${counselingDetailKey(childProfileId, sessionId)}/start`, {
+    method: "POST",
+  });
+}
+
+export function handoffCounselingSession(childProfileId, sessionId, payload) {
+  return apiRequest(`${counselingDetailKey(childProfileId, sessionId)}/handoff`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}

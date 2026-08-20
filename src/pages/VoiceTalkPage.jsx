@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { sendDialogue } from "@/api/voiceApi";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate, useParams } from "react-router";
+import { handoffCounselingSession } from "@/api/counselingApi";
 import { useChildVoiceCall } from "@/hooks/useChildVoiceCall";
 import {
   canStartVoiceCall,
@@ -7,6 +9,7 @@ import {
   spokenText,
   toDialoguePayload,
 } from "@/utils/voiceUtils";
+import { getErrorMessage } from "@/utils/errors";
 import "./VoiceTalkPage.css";
 
 const STATUS_LABEL = {
@@ -18,14 +21,30 @@ const STATUS_LABEL = {
 };
 
 export function VoiceTalkPage() {
+  const navigate = useNavigate();
+  const { childId, sessionId } = useParams();
+  const childProfileId = Number(childId);
+  const counselingSessionId = Number(sessionId);
+  const hasValidSession =
+    Number.isInteger(childProfileId) &&
+    childProfileId > 0 &&
+    Number.isInteger(counselingSessionId) &&
+    counselingSessionId > 0;
+  const detailPath = `/children/${childProfileId}/counseling/${counselingSessionId}`;
   const ready = canStartVoiceCall();
   const [sendError, setSendError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { status, error, history, nearbySpeech, startCall, endCall } = useChildVoiceCall();
   const inCall = status === "connected" || status === "speaking";
   const utterances = history.filter(isUtterance);
-  const message = sendError || error || (!ready ? "이 브라우저에서는 음성 대화를 사용할 수 없습니다." : "");
+  const message =
+    sendError ||
+    error ||
+    (!hasValidSession ? "상담 세션 정보를 찾을 수 없습니다." : "") ||
+    (!ready ? "이 브라우저에서는 음성 대화를 사용할 수 없습니다." : "");
 
   async function handleCircleClick() {
+    if (!hasValidSession || isSubmitting) return;
     setSendError("");
     if (!inCall) {
       await startCall();
@@ -34,10 +53,14 @@ export function VoiceTalkPage() {
 
     const dialogue = toDialoguePayload(history);
     endCall();
+    setIsSubmitting(true);
     try {
-      await sendDialogue(dialogue);
+      await handoffCounselingSession(childProfileId, counselingSessionId, dialogue);
+      navigate(detailPath, { replace: true });
     } catch (caught) {
-      setSendError(caught instanceof Error ? caught.message : String(caught));
+      setSendError(getErrorMessage(caught));
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -47,7 +70,17 @@ export function VoiceTalkPage() {
     <main className="voice-page">
       <button
         type="button"
-        disabled={!ready || status === "connecting"}
+        className="voice-back-button"
+        onClick={() => navigate(-1)}
+        aria-label="이전 페이지로 돌아가기"
+      >
+        <ArrowLeft size={18} aria-hidden="true" />
+        <span>뒤로가기</span>
+      </button>
+
+      <button
+        type="button"
+        disabled={!ready || !hasValidSession || isSubmitting || status === "connecting"}
         onClick={() => void handleCircleClick()}
         aria-label={`${STATUS_LABEL[status]}. ${message}`.trim()}
         title={message || STATUS_LABEL[status]}

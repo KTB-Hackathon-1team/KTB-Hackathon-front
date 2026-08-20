@@ -26,29 +26,6 @@ export function childAgentCallConfig() {
   };
 }
 
-export async function issueBrowserRealtimeKey(apiKey) {
-  // Hackathon-only flow. Replace this browser key with a backend-issued
-  // ephemeral credential before publishing the application.
-  const response = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(childAgentSession),
-  });
-  const data = await response.json();
-
-  if (!response.ok || !data.value?.startsWith("ek_")) {
-    throw new Error(data.error?.message ?? `브라우저 통화 키 발급 실패 (${response.status})`);
-  }
-  return data.value;
-}
-
-export function sendDialogue(payload) {
-  // The backend dialogue contract is not defined yet; preserve the original target.
-  return apiRequest("", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export function requestRealtimeClientSecret() {
+  return apiRequest("/api/voice/realtime-token", { method: "POST" });
 }

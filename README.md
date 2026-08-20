@@ -19,11 +19,11 @@ npm run dev
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:8080
-VITE_OPENAI_API_KEY=
 ```
 
 - `VITE_API_BASE_URL`: 백엔드 API 주소입니다.
-- `VITE_OPENAI_API_KEY`: 로컬 음성 대화 데모에 사용합니다. `VITE_` 변수는 브라우저에 노출되므로 배포 환경에서는 API 키를 넣지 말고, 백엔드에서 OpenAI Realtime 임시 자격 증명을 발급하도록 변경해야 합니다.
+
+음성 대화는 백엔드가 로그인 사용자를 확인한 뒤 OpenAI Realtime 임시 자격 증명을 발급하는 방식으로 동작합니다. OpenAI 장기 API 키는 프론트 환경변수에 넣지 말고 백엔드 환경변수에만 보관해야 합니다.
 
 Access Token은 브라우저 메모리에서 관리하고 Refresh Token은 HttpOnly 쿠키를 사용합니다. `/` 접속 시 세션을 복구한 뒤 로그인 또는 대시보드로 이동하며, 인증이 필요한 API가 401을 반환하면 refresh 후 한 번만 재시도합니다.
 
