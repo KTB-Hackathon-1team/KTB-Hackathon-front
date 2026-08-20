@@ -11,22 +11,18 @@
   letter-spacing: -0.025em;
 }
 
-.brand__icon {
-  display: grid;
-  width: 2.5rem;
+.brand__logo {
+  display: block;
+  width: 3rem;
   height: 2.5rem;
-  place-items: center;
-  border: 1px solid #dec2b2;
-  border-radius: 1rem;
-  background: #fff4ec;
-  color: #8a4f39;
-  box-shadow: var(--shadow-sm);
+  object-fit: contain;
 }
 
-.brand__icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-  stroke-width: 2.25;
+.brand__text {
+  display: block;
+  width: 5rem;
+  height: 2.5rem;
+  object-fit: contain;
 }
 
 .auth-layout {
@@ -318,8 +314,3 @@
 .ui-button.password-field__toggle:hover,
 .ui-button.password-field__toggle:active { background: transparent; }
 .ui-button.password-field__toggle:active { transform: translateY(-50%); }
-
-@media (min-width: 640px) {
-  .ui-dialog__footer { flex-direction: row; justify-content: flex-end; }
-  .ui-textarea { font-size: 0.875rem; }
-}

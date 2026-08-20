@@ -103,6 +103,7 @@
   gap: 0;
   overflow: hidden;
   border: 2px solid transparent;
+  border-radius: 50%;
   padding: 0;
   box-shadow: 0 8px 18px rgb(117 67 47 / 0.05);
   transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
@@ -174,13 +175,11 @@
 .profile-card--add {
   display: grid;
   place-items: center;
-  border-color: #caa993;
-  border-style: dashed;
   background: rgb(255 255 255 / 0.7);
 }
 
 .profile-card-button:hover .profile-card--add {
-  border-color: #a8623e;
+  background: #f8eae1;
 }
 
 .profile-card__add-icon {
@@ -191,6 +190,14 @@
   border-radius: 999px;
   background: #f8eae1;
   color: #a8623e;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.profile-card-button:hover .profile-card__add-icon {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .profile-card__add-icon svg {
@@ -304,14 +311,3 @@
 }
 
 .dashboard-page__notice .ui-alert__description { color: #80503b; }
-
-@media (min-width: 640px) {
-  .dashboard-page__content {
-    padding-right: 2rem;
-    padding-left: 2rem;
-  }
-
-  .selection-panel .ui-card__content {
-    flex-direction: row;
-  }
-}
