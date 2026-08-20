@@ -5,6 +5,7 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { useAuth } from "@/hooks/useAuth";
+import { protectedRouteState } from "@/utils/authRoute";
 
 function RouteLoading({ message = "로그인 상태를 확인하는 중..." }) {
   return <main className="route-loading" aria-live="polite">{message}</main>;
@@ -28,8 +29,10 @@ function PublicOnlyRoute() {
 }
 
 function ProtectedRoute() {
-  const { user } = useAuth();
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
+  const { user, isRestoring } = useAuth();
+  const state = protectedRouteState(user, isRestoring);
+  if (state === "loading") return <RouteLoading />;
+  return state === "outlet" ? <Outlet /> : <Navigate to="/login" replace />;
 }
 
 function NotFoundPage() {

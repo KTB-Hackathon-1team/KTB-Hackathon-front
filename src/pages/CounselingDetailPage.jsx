@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { getErrorMessage } from "@/utils/errors";
 import "./CounselingDetailPage.css";
 
-const statusLabels = {
+export const statusLabels = {
   DRAFT: "상담 준비",
   RECORDING: "대화 진행 중",
   TRANSCRIBING: "대화 정리 중",
@@ -28,6 +28,11 @@ const statusLabels = {
   COMPLETED: "분석 완료",
   FAILED: "다시 시도 필요",
 };
+const processingStatuses = new Set(["TRANSCRIBING", "ANALYZING"]);
+
+export function counselingDetailRefreshInterval(latestDetail) {
+  return processingStatuses.has(latestDetail?.status) ? 3000 : 0;
+}
 
 export function CounselingDetailPage() {
   const navigate = useNavigate();
@@ -42,11 +47,14 @@ export function CounselingDetailPage() {
   const detailKey = isValid
     ? counselingDetailKey(childProfileId, counselingSessionId)
     : null;
-  const { data: counselingDetail, error, isLoading } = useSWR(detailKey);
+  const { data: counselingDetail, error, isLoading } = useSWR(detailKey, {
+    refreshInterval: counselingDetailRefreshInterval,
+  });
   const [isStarting, setIsStarting] = useState(false);
   const [actionError, setActionError] = useState("");
   const talkPath = `/children/${childProfileId}/counseling/${counselingSessionId}/talk`;
   const isCompleted = counselingDetail?.status === "COMPLETED";
+  const isProcessing = processingStatuses.has(counselingDetail?.status);
   const analysisReport = isCompleted ? counselingDetail.analysisReport : null;
   const qaPairs = buildQaPairs(counselingDetail?.conversation?.turns);
 
@@ -177,6 +185,22 @@ export function CounselingDetailPage() {
                   />
                 </div>
               </section>
+            ) : isProcessing ? (
+              <Card className="analysis-pending" role="status" aria-live="polite">
+                <CardContent>
+                  <span className="analysis-pending__icon">
+                    <LoaderCircle className="spin" />
+                  </span>
+                  <div>
+                    <strong>
+                      {counselingDetail.status === "TRANSCRIBING"
+                        ? "아이와 나눈 대화를 정리하고 있어요"
+                        : "아이의 마음을 분석하고 있어요"}
+                    </strong>
+                    <p>완료되면 마음 리포트가 이곳에 자동으로 표시됩니다.</p>
+                  </div>
+                </CardContent>
+              </Card>
             ) : isCompleted ? (
               <Card className="analysis-pending">
                 <CardContent>

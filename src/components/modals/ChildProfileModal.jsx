@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Camera, Info, Mars, Venus } from "lucide-react";
+import { RadioGroup } from "radix-ui";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
@@ -18,6 +19,7 @@ import {
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { getErrorMessage } from "@/utils/errors";
+import { localDateString } from "@/utils/date";
 import "./ChildProfileModal.css";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -155,6 +157,7 @@ export function ChildProfileModal({
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 aria-invalid={Boolean(errors.profileImage)}
+                aria-describedby={errors.profileImage ? "child-image-error" : undefined}
                 className="child-form__file-input"
                 {...register("profileImage", {
                   validate: (files) => {
@@ -167,7 +170,7 @@ export function ChildProfileModal({
                   },
                 })}
               />
-              {errors.profileImage && <p className="form-field__error">{errors.profileImage.message}</p>}
+              {errors.profileImage && <p className="form-field__error" id="child-image-error">{errors.profileImage.message}</p>}
             </div>
           )}
 
@@ -178,13 +181,14 @@ export function ChildProfileModal({
               maxLength={30}
               placeholder="예: 민준"
               aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? `${inputIdPrefix}-name-error` : undefined}
               className="child-form__input"
               {...register("name", {
                 setValueAs: (value) => value.trim(),
                 required: "이름을 입력해 주세요.",
               })}
             />
-            {errors.name && <p className="form-field__error">{errors.name.message}</p>}
+            {errors.name && <p className="form-field__error" id={`${inputIdPrefix}-name-error`}>{errors.name.message}</p>}
           </div>
 
           <div className="form-field">
@@ -192,17 +196,18 @@ export function ChildProfileModal({
             <Input
               id={`${inputIdPrefix}-birth-date`}
               type="date"
-              max={new Date().toISOString().slice(0, 10)}
+              max={localDateString()}
               aria-invalid={Boolean(errors.birthDate)}
+              aria-describedby={errors.birthDate ? `${inputIdPrefix}-birth-date-error` : undefined}
               className="child-form__input"
               {...register("birthDate", {
                 required: "생년월일을 입력해 주세요.",
                 validate: (value) =>
-                  value <= new Date().toISOString().slice(0, 10) ||
+                  value <= localDateString() ||
                   "생년월일은 오늘 이후일 수 없어요.",
               })}
             />
-            {errors.birthDate && <p className="form-field__error">{errors.birthDate.message}</p>}
+            {errors.birthDate && <p className="form-field__error" id={`${inputIdPrefix}-birth-date-error`}>{errors.birthDate.message}</p>}
           </div>
 
           <div className="form-field">
@@ -212,37 +217,34 @@ export function ChildProfileModal({
               control={control}
               rules={{ required: "성별을 선택해 주세요." }}
               render={({ field }) => (
-                <div
+                <RadioGroup.Root
                   className="child-form__gender-options"
-                  role="radiogroup"
                   aria-label="성별"
                   aria-invalid={Boolean(errors.gender)}
+                  aria-describedby={errors.gender ? `${inputIdPrefix}-gender-error` : undefined}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  onBlur={field.onBlur}
                 >
-                  <button
-                    type="button"
+                  <RadioGroup.Item
+                    value="MALE"
                     className="child-form__gender-option child-form__gender-option--male"
-                    role="radio"
-                    aria-checked={field.value === "MALE"}
                     ref={field.ref}
-                    onClick={() => field.onChange("MALE")}
                   >
                     <Mars aria-hidden="true" />
                     <span>남아</span>
-                  </button>
-                  <button
-                    type="button"
+                  </RadioGroup.Item>
+                  <RadioGroup.Item
+                    value="FEMALE"
                     className="child-form__gender-option child-form__gender-option--female"
-                    role="radio"
-                    aria-checked={field.value === "FEMALE"}
-                    onClick={() => field.onChange("FEMALE")}
                   >
                     <Venus aria-hidden="true" />
                     <span>여아</span>
-                  </button>
-                </div>
+                  </RadioGroup.Item>
+                </RadioGroup.Root>
               )}
             />
-            {errors.gender && <p className="form-field__error">{errors.gender.message}</p>}
+            {errors.gender && <p className="form-field__error" id={`${inputIdPrefix}-gender-error`}>{errors.gender.message}</p>}
           </div>
 
           {!isEditMode && (

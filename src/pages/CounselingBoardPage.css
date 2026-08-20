@@ -247,7 +247,9 @@
 
 .session-card__icon svg { width: 1.25rem; height: 1.25rem; }
 .session-card__body { min-width: 0; }
+.session-card__meta { display: flex; align-items: center; gap: 0.5rem; }
 .session-card__date { color: #8b786e; font-size: 0.75rem; }
+.session-card__meta .status-badge { padding: 0.125rem 0.5rem; font-size: 0.625rem; }
 .session-card__body strong { display: block; margin-top: 0.25rem; overflow: hidden; font-size: 0.875rem; text-overflow: ellipsis; white-space: nowrap; }
 .session-card__summary { display: none; margin-top: 0.25rem; overflow: hidden; color: #79685f; font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
 .session-card__action { display: flex; align-items: center; gap: 0.25rem; color: #865039; font-size: 0.75rem; font-weight: 600; }

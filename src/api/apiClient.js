@@ -58,10 +58,17 @@ async function execute(path, init = {}) {
     throw new ApiError("서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.", 0);
   }
 
-  const result = await response.json().catch(() => ({
-    message: "서버 응답을 처리할 수 없습니다.",
-    data: null,
-  }));
+  if (response.status === 204) return null;
+
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    if (response.ok) {
+      throw new ApiError("서버 응답을 처리할 수 없습니다.", response.status);
+    }
+    result = {};
+  }
 
   if (!response.ok) {
     throw new ApiError(result.message || "요청 처리에 실패했습니다.", response.status);
