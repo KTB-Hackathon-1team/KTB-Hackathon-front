@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, ArrowRight, Camera, Check, Ellipsis, Info, LogOut, Mars, Pencil, Plus, Trash2, Venus } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, Ellipsis, Info, LogOut, Pencil, Plus, Trash2 } from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
-import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
@@ -13,28 +12,18 @@ import {
   uploadChildProfileImage,
 } from "@/api/childrenApi";
 import { Brand } from "@/components/Brand";
+import { ChildDeleteModal } from "@/components/modals/ChildDeleteModal";
+import { ChildProfileModal } from "@/components/modals/ChildProfileModal";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/Dialog";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
 import { useAuth } from "@/hooks/useAuth";
 import { useChild } from "@/hooks/useChild";
 import { getAge } from "@/utils/date";
 import { getErrorMessage } from "@/utils/errors";
 import "./DashboardPage.css";
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const PROFILE_TONES = [
   "profile-tone--peach",
   "profile-tone--green",
@@ -78,26 +67,6 @@ export function DashboardPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const {
-    clearErrors,
-    control,
-    handleSubmit,
-    register,
-    reset,
-    setError,
-    watch,
-    formState: { errors },
-  } = useForm({ defaultValues: { name: "", birthDate: "", gender: "" } });
-  const {
-    control: editControl,
-    handleSubmit: handleEditSubmit,
-    register: registerEdit,
-    reset: resetEdit,
-    setError: setEditError,
-    formState: { errors: editErrors },
-  } = useForm({ defaultValues: { name: "", birthDate: "", gender: "" } });
-  const profileImageFile = watch("profileImage")?.[0];
-  const [profileImagePreview, setProfileImagePreview] = useState("");
 
   useEffect(() => {
     if (children.length && !children.some((child) => child.id === selectedChildId)) {
@@ -105,52 +74,26 @@ export function DashboardPage() {
     }
   }, [children, selectChild, selectedChildId]);
 
-  useEffect(() => {
-    if (!profileImageFile) {
-      setProfileImagePreview("");
-      return undefined;
-    }
-
-    const previewUrl = URL.createObjectURL(profileImageFile);
-    setProfileImagePreview(previewUrl);
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [profileImageFile]);
-
   const handleRegister = useCallback(async (data) => {
-    clearErrors("root");
     setNotice("");
-    const selectedImage = data.profileImage?.[0];
-    const image = selectedImage?.size ? selectedImage : undefined;
 
-    try {
-      const result = await registerChild({
-        input: {
-          name: data.name,
-          birthDate: data.birthDate,
-          gender: data.gender,
-        },
-        image,
-      });
-      if (!result) return;
-      await mutate(
-        (current = []) => [
-          ...current.filter((child) => child.id !== result.profile.id),
-          result.profile,
-        ],
-        { revalidate: false },
-      );
-      selectChild(result.profile.id);
-      setNotice(
-        result.imageUploadFailed
-          ? `${result.profile.name}이 등록되었지만 사진은 업로드하지 못했어요.`
-          : `${result.profile.name}이 새로 등록되고 선택되었어요.`,
-      );
-      reset();
-      setIsDialogOpen(false);
-    } catch (mutationError) {
-      setError("root", { message: getErrorMessage(mutationError) });
-    }
-  }, [clearErrors, mutate, registerChild, reset, selectChild, setError]);
+    const result = await registerChild(data);
+    if (!result) return null;
+    await mutate(
+      (current = []) => [
+        ...current.filter((child) => child.id !== result.profile.id),
+        result.profile,
+      ],
+      { revalidate: false },
+    );
+    selectChild(result.profile.id);
+    setNotice(
+      result.imageUploadFailed
+        ? `${result.profile.name}이 등록되었지만 사진은 업로드하지 못했어요.`
+        : `${result.profile.name}이 새로 등록되고 선택되었어요.`,
+    );
+    return result;
+  }, [mutate, registerChild, selectChild]);
 
   const handleLogout = useCallback(async () => {
     setIsLoggingOut(true);
@@ -164,31 +107,23 @@ export function DashboardPage() {
   }, [logout, mutateAll, navigate]);
 
   const openEditDialog = useCallback((child) => {
-    resetEdit({
-      name: child.name,
-      birthDate: child.birthDate,
-      gender: child.gender,
-    });
     setEditingChild(child);
-  }, [resetEdit]);
+  }, []);
 
-  const handleUpdate = useCallback(async (data) => {
-    if (!editingChild) return;
+  const handleUpdate = useCallback(async (childId, data) => {
     setIsUpdating(true);
     try {
-      const updated = await updateChild(editingChild.id, data);
+      const updated = await updateChild(childId, data);
       await mutate(
         (current = []) => current.map((child) => child.id === updated.id ? updated : child),
         { revalidate: false },
       );
       setNotice(`${updated.name}이의 정보가 수정되었어요.`);
-      setEditingChild(null);
-    } catch (updateError) {
-      setEditError("root", { message: getErrorMessage(updateError) });
+      return updated;
     } finally {
       setIsUpdating(false);
     }
-  }, [editingChild, mutate, setEditError]);
+  }, [mutate]);
 
   const handleDelete = useCallback(async () => {
     if (!deletingChild) return;
@@ -330,7 +265,6 @@ export function DashboardPage() {
                 className="profile-card-button"
                 type="button"
                 onClick={() => {
-                  clearErrors();
                   setIsDialogOpen(true);
                 }}
               >
@@ -378,310 +312,26 @@ export function DashboardPage() {
         )}
       </section>
 
-      <Dialog
-        open={isDialogOpen}
-        onOpenChange={(open) => {
-          if (!isMutating) setIsDialogOpen(open);
+      <ChildProfileModal
+        open={isDialogOpen || Boolean(editingChild)}
+        editingChild={editingChild}
+        isCreating={isMutating}
+        isUpdating={isUpdating}
+        onCreate={handleRegister}
+        onUpdate={handleUpdate}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setEditingChild(null);
         }}
-      >
-        <DialogContent className="child-dialog">
-          <DialogHeader>
-            <span className="child-dialog__eyebrow">새 프로필</span>
-            <DialogTitle className="child-dialog__title">아이 등록</DialogTitle>
-            <DialogDescription>
-              아이에게 맞는 대화를 준비할 수 있도록 알려주세요.
-            </DialogDescription>
-          </DialogHeader>
-          <form className="child-form" onSubmit={handleSubmit(handleRegister)} noValidate>
-            <div className="form-field child-form__avatar-field">
-              <Label>프로필 사진 <span className="child-form__optional">(선택)</span></Label>
-              <label className="child-form__avatar-picker" htmlFor="child-image">
-                <Avatar className="child-form__avatar-preview" size="lg">
-                  <AvatarImage src={profileImagePreview || undefined} alt="선택한 프로필 사진 미리보기" />
-                  <AvatarFallback><Camera aria-hidden="true" /></AvatarFallback>
-                </Avatar>
-                <span className="child-form__avatar-badge"><Camera aria-hidden="true" /></span>
-                <span className="child-form__avatar-hint">
-                  {profileImageFile ? "사진 변경" : "사진 선택"}
-                </span>
-              </label>
-              <Input
-                id="child-image"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                aria-invalid={Boolean(errors.profileImage)}
-                className="child-form__file-input"
-                {...register("profileImage", {
-                  validate: (files) => {
-                    const image = files?.[0];
-                    if (!image) return true;
-                    if (!ALLOWED_IMAGE_TYPES.includes(image.type)) {
-                      return "프로필 사진은 JPEG, PNG, WebP 형식만 사용할 수 있어요.";
-                    }
-                    return image.size <= MAX_IMAGE_SIZE || "프로필 사진은 5MB 이하로 선택해 주세요.";
-                  },
-                })}
-              />
-              {errors.profileImage && <p className="form-field__error">{errors.profileImage.message}</p>}
-            </div>
+      />
 
-            <div className="form-field">
-              <Label htmlFor="child-name">이름</Label>
-              <Input
-                id="child-name"
-                maxLength={30}
-                placeholder="예: 민준"
-                aria-invalid={Boolean(errors.name)}
-                className="child-form__input"
-                {...register("name", {
-                  setValueAs: (value) => value.trim(),
-                  required: "이름을 입력해 주세요.",
-                })}
-              />
-              {errors.name && <p className="form-field__error">{errors.name.message}</p>}
-            </div>
-
-            <div className="form-field">
-              <Label htmlFor="child-birth-date">생년월일</Label>
-              <Input
-                id="child-birth-date"
-                type="date"
-                max={new Date().toISOString().slice(0, 10)}
-                aria-invalid={Boolean(errors.birthDate)}
-                className="child-form__input"
-                {...register("birthDate", {
-                  required: "생년월일을 입력해 주세요.",
-                  validate: (value) =>
-                    value <= new Date().toISOString().slice(0, 10) ||
-                    "생년월일은 오늘 이후일 수 없어요.",
-                })}
-              />
-              {errors.birthDate && <p className="form-field__error">{errors.birthDate.message}</p>}
-            </div>
-
-            <div className="form-field">
-              <Label>성별</Label>
-              <Controller
-                name="gender"
-                control={control}
-                rules={{ required: "성별을 선택해 주세요." }}
-                render={({ field }) => (
-                  <div
-                    className="child-form__gender-options"
-                    role="radiogroup"
-                    aria-label="성별"
-                    aria-invalid={Boolean(errors.gender)}
-                  >
-                    <button
-                      type="button"
-                      className="child-form__gender-option child-form__gender-option--male"
-                      role="radio"
-                      aria-checked={field.value === "MALE"}
-                      ref={field.ref}
-                      onClick={() => field.onChange("MALE")}
-                    >
-                      <Mars aria-hidden="true" />
-                      <span>남아</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="child-form__gender-option child-form__gender-option--female"
-                      role="radio"
-                      aria-checked={field.value === "FEMALE"}
-                      onClick={() => field.onChange("FEMALE")}
-                    >
-                      <Venus aria-hidden="true" />
-                      <span>여아</span>
-                    </button>
-                  </div>
-                )}
-              />
-              {errors.gender && <p className="form-field__error">{errors.gender.message}</p>}
-            </div>
-
-            <Alert className="child-form__info">
-              <Info />
-              <AlertDescription>
-                JPEG, PNG, WebP 파일을 최대 5MB까지 등록할 수 있어요. 아이 생성 후 사진이 이어서 업로드됩니다.
-              </AlertDescription>
-            </Alert>
-
-            {errors.root?.message && (
-              <Alert variant="destructive">
-                <AlertCircle />
-                <AlertDescription>{errors.root.message}</AlertDescription>
-              </Alert>
-            )}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isMutating}
-                onClick={() => setIsDialogOpen(false)}
-              >
-                취소
-              </Button>
-              <Button type="submit" disabled={isMutating} className="child-form__submit">
-                {isMutating ? "등록하는 중..." : "등록하기"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={Boolean(editingChild)}
-        onOpenChange={(open) => {
-          if (!open && !isUpdating) setEditingChild(null);
-        }}
-      >
-        <DialogContent className="child-dialog">
-          <DialogHeader>
-            <span className="child-dialog__eyebrow">프로필 관리</span>
-            <DialogTitle className="child-dialog__title">아이 정보 수정</DialogTitle>
-            <DialogDescription>등록된 아이 정보를 변경할 수 있어요.</DialogDescription>
-          </DialogHeader>
-          <form className="child-form" onSubmit={handleEditSubmit(handleUpdate)} noValidate>
-            <div className="form-field">
-              <Label htmlFor="edit-child-name">이름</Label>
-              <Input
-                id="edit-child-name"
-                maxLength={30}
-                aria-invalid={Boolean(editErrors.name)}
-                className="child-form__input"
-                {...registerEdit("name", {
-                  setValueAs: (value) => value.trim(),
-                  required: "이름을 입력해 주세요.",
-                })}
-              />
-              {editErrors.name && <p className="form-field__error">{editErrors.name.message}</p>}
-            </div>
-
-            <div className="form-field">
-              <Label htmlFor="edit-child-birth-date">생년월일</Label>
-              <Input
-                id="edit-child-birth-date"
-                type="date"
-                max={new Date().toISOString().slice(0, 10)}
-                aria-invalid={Boolean(editErrors.birthDate)}
-                className="child-form__input"
-                {...registerEdit("birthDate", {
-                  required: "생년월일을 입력해 주세요.",
-                  validate: (value) =>
-                    value <= new Date().toISOString().slice(0, 10) ||
-                    "생년월일은 오늘 이후일 수 없어요.",
-                })}
-              />
-              {editErrors.birthDate && <p className="form-field__error">{editErrors.birthDate.message}</p>}
-            </div>
-
-            <div className="form-field">
-              <Label>성별</Label>
-              <Controller
-                name="gender"
-                control={editControl}
-                rules={{ required: "성별을 선택해 주세요." }}
-                render={({ field }) => (
-                  <div
-                    className="child-form__gender-options"
-                    role="radiogroup"
-                    aria-label="성별"
-                    aria-invalid={Boolean(editErrors.gender)}
-                  >
-                    <button
-                      type="button"
-                      className="child-form__gender-option child-form__gender-option--male"
-                      role="radio"
-                      aria-checked={field.value === "MALE"}
-                      ref={field.ref}
-                      onClick={() => field.onChange("MALE")}
-                    >
-                      <Mars aria-hidden="true" />
-                      <span>남아</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="child-form__gender-option child-form__gender-option--female"
-                      role="radio"
-                      aria-checked={field.value === "FEMALE"}
-                      onClick={() => field.onChange("FEMALE")}
-                    >
-                      <Venus aria-hidden="true" />
-                      <span>여아</span>
-                    </button>
-                  </div>
-                )}
-              />
-              {editErrors.gender && <p className="form-field__error">{editErrors.gender.message}</p>}
-            </div>
-
-            {editErrors.root?.message && (
-              <Alert variant="destructive">
-                <AlertCircle />
-                <AlertDescription>{editErrors.root.message}</AlertDescription>
-              </Alert>
-            )}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isUpdating}
-                onClick={() => setEditingChild(null)}
-              >
-                취소
-              </Button>
-              <Button type="submit" disabled={isUpdating} className="child-form__submit">
-                {isUpdating ? "수정하는 중..." : "수정하기"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={Boolean(deletingChild)}
-        onOpenChange={(open) => {
-          if (!open && !isDeleting) setDeletingChild(null);
-        }}
-      >
-        <DialogContent className="child-delete-dialog" showCloseButton={!isDeleting}>
-          <DialogHeader>
-            <span className="child-dialog__eyebrow">프로필 관리</span>
-            <DialogTitle className="child-dialog__title">아이 프로필 삭제</DialogTitle>
-            <DialogDescription>
-              {deletingChild?.name}이의 프로필과 연결된 상담 기록, 대화, 분석 결과가 모두 삭제되며 되돌릴 수 없어요.
-            </DialogDescription>
-          </DialogHeader>
-
-          {deleteError && (
-            <Alert variant="destructive">
-              <AlertCircle />
-              <AlertDescription>{deleteError}</AlertDescription>
-            </Alert>
-          )}
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isDeleting}
-              onClick={() => setDeletingChild(null)}
-            >
-              취소
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isDeleting}
-              onClick={() => void handleDelete()}
-            >
-              <Trash2 /> {isDeleting ? "삭제하는 중..." : "삭제하기"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ChildDeleteModal
+        child={deletingChild}
+        isDeleting={isDeleting}
+        error={deleteError}
+        onConfirm={() => void handleDelete()}
+        onClose={() => setDeletingChild(null)}
+      />
     </main>
   );
 }
