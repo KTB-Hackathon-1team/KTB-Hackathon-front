@@ -21,16 +21,22 @@ function errorMessage(error) {
   return String(error);
 }
 
-export function useChildVoiceCall() {
+export function useChildVoiceCall({ onEnded } = {}) {
   const sessionRef = useRef(null);
   const audioRef = useRef(null);
   const micStopRef = useRef(null);
   const hangupRequestedRef = useRef(false);
   const farewellStartedRef = useRef(false);
+  const historyRef = useRef([]);
+  const onEndedRef = useRef(onEnded);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
   const [nearbySpeech, setNearbySpeech] = useState(null);
+
+  useEffect(() => {
+    onEndedRef.current = onEnded;
+  }, [onEnded]);
 
   const endCall = useCallback(() => {
     hangupRequestedRef.current = false;
@@ -58,6 +64,7 @@ export function useChildVoiceCall() {
     endCall();
     setError(null);
     setHistory([]);
+    historyRef.current = [];
     setStatus("connecting");
 
     try {
@@ -107,7 +114,10 @@ export function useChildVoiceCall() {
         },
       );
 
-      session.on("history_updated", setHistory);
+      session.on("history_updated", (nextHistory) => {
+        historyRef.current = nextHistory;
+        setHistory(nextHistory);
+      });
       session.on("audio_start", () => {
         if (hangupRequestedRef.current) {
           farewellStartedRef.current = true;
@@ -117,12 +127,14 @@ export function useChildVoiceCall() {
       session.on("audio_stopped", () => {
         if (hangupRequestedRef.current && farewellStartedRef.current) {
           endCall();
+          onEndedRef.current?.(historyRef.current);
           return;
         }
         setStatus("connected");
       });
       session.on("audio_interrupted", () => setStatus("connected"));
       session.on("error", (event) => {
+        endCall();
         setError(errorMessage(event.error));
         setStatus("error");
       });
@@ -131,12 +143,7 @@ export function useChildVoiceCall() {
       await session.connect({ apiKey: clientSecret });
       setStatus((current) => (current === "speaking" ? current : "connected"));
     } catch (caught) {
-      sessionRef.current?.close();
-      sessionRef.current = null;
-      micStopRef.current?.();
-      micStopRef.current = null;
-      audioRef.current = null;
-      setNearbySpeech(null);
+      endCall();
       setError(errorMessage(caught));
       setStatus("error");
     }

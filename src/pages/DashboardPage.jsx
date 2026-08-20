@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, ArrowRight, Check, Ellipsis, Info, LogOut, Pencil, Plus, Trash2 } from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import { useNavigate } from "react-router";
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import {
   CHILDREN_KEY,
@@ -48,7 +48,6 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { selectedChildId, selectChild } = useChild();
-  const { mutate: mutateAll } = useSWRConfig();
   const {
     data: children = [],
     error,
@@ -99,12 +98,11 @@ export function DashboardPage() {
     setIsLoggingOut(true);
     try {
       await logout();
-      await mutateAll(() => true, undefined, { revalidate: false });
       navigate("/login", { replace: true });
     } finally {
       setIsLoggingOut(false);
     }
-  }, [logout, mutateAll, navigate]);
+  }, [logout, navigate]);
 
   const openEditDialog = useCallback((child) => {
     setEditingChild(child);

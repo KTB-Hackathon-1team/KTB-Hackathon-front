@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { getErrorMessage } from "@/utils/errors";
 import "./CounselingDetailPage.css";
 
-const statusLabels = {
+export const statusLabels = {
   DRAFT: "상담 준비",
   RECORDING: "대화 진행 중",
   TRANSCRIBING: "대화 정리 중",

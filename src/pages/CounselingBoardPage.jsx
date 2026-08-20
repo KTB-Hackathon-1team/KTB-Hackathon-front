@@ -26,6 +26,7 @@ import {
 import { Brand } from "@/components/Brand";
 import { CounselingCreateModal } from "@/components/modals/CounselingCreateModal";
 import { CounselingDeleteModal } from "@/components/modals/CounselingDeleteModal";
+import { statusLabels } from "@/pages/CounselingDetailPage";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -249,7 +250,12 @@ export function CounselingBoardPage() {
                           <CardContent>
                             <span className="session-card__icon"><BookOpenText /></span>
                             <span className="session-card__body">
-                              <span className="session-card__date">{formatDate(session.date)}</span>
+                              <span className="session-card__meta">
+                                <span className="session-card__date">{formatDate(session.date)}</span>
+                                {statusLabels[session.status] && (
+                                  <span className="status-badge">{statusLabels[session.status]}</span>
+                                )}
+                              </span>
                               <strong>{session.title}</strong>
                               <span className="session-card__summary">{session.content}</span>
                             </span>

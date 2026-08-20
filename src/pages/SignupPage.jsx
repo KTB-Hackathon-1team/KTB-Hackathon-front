@@ -18,6 +18,10 @@ import { Label } from "@/components/ui/Label";
 import { useAuth } from "@/hooks/useAuth";
 import "./SignupPage.css";
 
+export function isValidSignupPassword(value) {
+  return /(?=.*[A-Za-z])(?=.*\d).{8,}/.test(value);
+}
+
 export function SignupPage() {
   const navigate = useNavigate();
   const { signup } = useAuth();
@@ -59,13 +63,14 @@ export function SignupPage() {
                 id="signup-id"
                 autoComplete="username"
                 aria-invalid={Boolean(errors.loginId)}
+                aria-describedby={errors.loginId ? "signup-id-error" : undefined}
                 className="signup-form__input"
                 {...register("loginId", {
                   setValueAs: (value) => value.trim(),
                   required: "아이디를 입력해 주세요.",
                 })}
               />
-              {errors.loginId && <p className="form-field__error">{errors.loginId.message}</p>}
+              {errors.loginId && <p className="form-field__error" id="signup-id-error">{errors.loginId.message}</p>}
             </div>
 
             <div className="form-field form-field--compact">
@@ -74,13 +79,14 @@ export function SignupPage() {
                 id="signup-nickname"
                 autoComplete="nickname"
                 aria-invalid={Boolean(errors.nickname)}
+                aria-describedby={errors.nickname ? "signup-nickname-error" : undefined}
                 className="signup-form__input"
                 {...register("nickname", {
                   setValueAs: (value) => value.trim(),
                   required: "닉네임을 입력해 주세요.",
                 })}
               />
-              {errors.nickname && <p className="form-field__error">{errors.nickname.message}</p>}
+              {errors.nickname && <p className="form-field__error" id="signup-nickname-error">{errors.nickname.message}</p>}
             </div>
 
             <div className="form-field form-field--compact">
@@ -91,13 +97,12 @@ export function SignupPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   aria-invalid={Boolean(errors.password)}
+                  aria-describedby={errors.password ? "signup-password-error" : undefined}
                   className="signup-form__input password-field__input"
                   {...register("password", {
                     required: "영문·숫자를 포함해 8자 이상 입력해 주세요.",
-                    minLength: {
-                      value: 8,
-                      message: "영문·숫자를 포함해 8자 이상 입력해 주세요.",
-                    },
+                    validate: (value) =>
+                      isValidSignupPassword(value) || "영문·숫자를 포함해 8자 이상 입력해 주세요.",
                   })}
                 />
                 <Button
@@ -111,7 +116,7 @@ export function SignupPage() {
                   {showPassword ? <EyeOff /> : <Eye />}
                 </Button>
               </div>
-              {errors.password && <p className="form-field__error">{errors.password.message}</p>}
+              {errors.password && <p className="form-field__error" id="signup-password-error">{errors.password.message}</p>}
             </div>
 
             <div className="form-field form-field--compact">
@@ -121,13 +126,14 @@ export function SignupPage() {
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
                 aria-invalid={Boolean(errors.confirmPassword)}
+                aria-describedby={errors.confirmPassword ? "signup-confirm-error" : undefined}
                 className="signup-form__input"
                 {...register("confirmPassword", {
                   validate: (value) => value === getValues("password") || "비밀번호가 일치하지 않아요.",
                 })}
               />
               {errors.confirmPassword && (
-                <p className="form-field__error">{errors.confirmPassword.message}</p>
+                <p className="form-field__error" id="signup-confirm-error">{errors.confirmPassword.message}</p>
               )}
             </div>
 

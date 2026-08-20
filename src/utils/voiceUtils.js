@@ -45,38 +45,40 @@ function speechLoudness(data) {
 
 export async function openNearbySpeechInput(rawStream, onLevel) {
   const context = new AudioContext();
-  if (context.state === "suspended") await context.resume();
+  try {
+    if (context.state === "suspended") await context.resume();
 
-  const source = context.createMediaStreamSource(rawStream);
-  const highpass = context.createBiquadFilter();
-  highpass.type = "highpass";
-  highpass.frequency.value = 120;
+    const source = context.createMediaStreamSource(rawStream);
+    const highpass = context.createBiquadFilter();
+    highpass.type = "highpass";
+    highpass.frequency.value = 120;
 
-  const analyser = context.createAnalyser();
-  analyser.fftSize = 1024;
-  analyser.smoothingTimeConstant = 0.35;
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.35;
 
-  const delay = context.createDelay(0.5);
-  delay.delayTime.value = CATCH_FIRST_SOUND_MS / 1000;
-  const gain = context.createGain();
-  gain.gain.value = 0;
-  const destination = context.createMediaStreamDestination();
+    const delay = context.createDelay(0.5);
+    delay.delayTime.value = CATCH_FIRST_SOUND_MS / 1000;
+    const gain = context.createGain();
+    gain.gain.value = 0;
+    const destination = context.createMediaStreamDestination();
 
-  source.connect(highpass);
-  highpass.connect(analyser);
-  highpass.connect(delay);
-  delay.connect(gain);
-  gain.connect(destination);
+    source.connect(highpass);
+    highpass.connect(analyser);
+    highpass.connect(delay);
+    delay.connect(gain);
+    gain.connect(destination);
 
-  const samples = new Uint8Array(analyser.fftSize);
-  let aboveSince = null;
-  let belowSince = null;
-  let speechUntil = 0;
-  let wasOpen = false;
-  let frame = 0;
-  let lastEmit = 0;
+    const samples = new Uint8Array(analyser.fftSize);
+    let aboveSince = null;
+    let belowSince = null;
+    let speechUntil = 0;
+    let wasOpen = false;
+    let frame = 0;
+    let lastEmit = 0;
+    let stopped = false;
 
-  const tick = (now) => {
+    const tick = (now) => {
     analyser.getByteTimeDomainData(samples);
     const rms = speechLoudness(samples);
 
@@ -107,22 +109,29 @@ export async function openNearbySpeechInput(rawStream, onLevel) {
       onLevel({ rms, open });
     }
     frame = requestAnimationFrame(tick);
-  };
+    };
 
-  frame = requestAnimationFrame(tick);
-  return {
-    stream: destination.stream,
-    stop() {
-      cancelAnimationFrame(frame);
-      source.disconnect();
-      highpass.disconnect();
-      delay.disconnect();
-      gain.disconnect();
-      analyser.disconnect();
-      void context.close();
-      stopChildMicrophone(rawStream);
-    },
-  };
+    frame = requestAnimationFrame(tick);
+    return {
+      stream: destination.stream,
+      stop() {
+        if (stopped) return;
+        stopped = true;
+        cancelAnimationFrame(frame);
+        source.disconnect();
+        highpass.disconnect();
+        delay.disconnect();
+        gain.disconnect();
+        analyser.disconnect();
+        void context.close();
+        stopChildMicrophone(rawStream);
+      },
+    };
+  } catch (error) {
+    void context.close?.();
+    stopChildMicrophone(rawStream);
+    throw error;
+  }
 }
 
 export function isUtterance(item) {
@@ -143,7 +152,7 @@ export function spokenText(item) {
 }
 
 export function toDialoguePayload(history) {
-  const turns = history.filter(isUtterance).flatMap((item) => {
+  const turns = history.filter((item) => isUtterance(item) && item.status === "completed").flatMap((item) => {
     const text = spokenText(item);
     if (!text || (item.role !== "user" && item.role !== "assistant")) return [];
     return [{ role: item.role, text, itemId: item.itemId, status: item.status }];

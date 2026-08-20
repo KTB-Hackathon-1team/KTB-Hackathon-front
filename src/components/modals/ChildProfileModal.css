@@ -68,17 +68,17 @@
 .child-form__gender-option--male svg { color: #4388d8; }
 .child-form__gender-option--female svg { color: #dc7995; }
 
-.child-form__gender-option[aria-checked="true"] {
+.child-form__gender-option[data-state="checked"] {
   box-shadow: 0 0 0 2px currentColor, 0 8px 18px rgb(117 67 47 / 0.1);
 }
 
-.child-form__gender-option--male[aria-checked="true"] {
+.child-form__gender-option--male[data-state="checked"] {
   border-color: #4388d8;
   background: #eff6ff;
   color: #2867ae;
 }
 
-.child-form__gender-option--female[aria-checked="true"] {
+.child-form__gender-option--female[data-state="checked"] {
   border-color: #dc7995;
   background: #fff1f5;
   color: #b65470;

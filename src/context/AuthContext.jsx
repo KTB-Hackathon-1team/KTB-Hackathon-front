@@ -1,4 +1,5 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import { SWRConfig } from "swr";
 import {
   loginRequest,
   logoutRequest,
@@ -9,7 +10,9 @@ import {
   clearApiSession,
   setApiSession,
   subscribeApiSession,
+  swrFetcher,
 } from "@/api/apiClient";
+import { sessionCacheKey } from "@/utils/authRoute";
 
 export const AuthContext = createContext(null);
 
@@ -80,5 +83,19 @@ export function AuthProvider({ children }) {
     logout,
   }), [isRestoring, login, logout, restoreSession, signup, user]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      <SWRConfig
+        key={sessionCacheKey(user)}
+        value={{
+          fetcher: swrFetcher,
+          provider: () => new Map(),
+          revalidateOnFocus: false,
+          shouldRetryOnError: false,
+        }}
+      >
+        {children}
+      </SWRConfig>
+    </AuthContext.Provider>
+  );
 }

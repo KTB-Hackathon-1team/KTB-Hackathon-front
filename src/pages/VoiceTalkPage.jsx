@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
-import { handoffCounselingSession } from "@/api/counselingApi";
+import useSWR from "swr";
+import { counselingDetailKey, handoffCounselingSession } from "@/api/counselingApi";
 import { useChildVoiceCall } from "@/hooks/useChildVoiceCall";
 import {
   canStartVoiceCall,
@@ -31,37 +32,60 @@ export function VoiceTalkPage() {
     Number.isInteger(counselingSessionId) &&
     counselingSessionId > 0;
   const detailPath = `/children/${childProfileId}/counseling/${counselingSessionId}`;
+  const detailKey = hasValidSession
+    ? counselingDetailKey(childProfileId, counselingSessionId)
+    : null;
+  const { data: counselingDetail, error: sessionError, isLoading: isLoadingSession } = useSWR(detailKey);
   const ready = canStartVoiceCall();
   const [sendError, setSendError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { status, error, history, nearbySpeech, startCall, endCall } = useChildVoiceCall();
-  const inCall = status === "connected" || status === "speaking";
-  const utterances = history.filter(isUtterance);
-  const message =
-    sendError ||
-    error ||
-    (!hasValidSession ? "대화 세션 정보를 찾을 수 없습니다." : "") ||
-    (!ready ? "이 브라우저에서는 음성 대화를 사용할 수 없습니다." : "");
-
-  async function handleCircleClick() {
-    if (!hasValidSession || isSubmitting) return;
+  const [pendingDialogue, setPendingDialogue] = useState(null);
+  const submitDialogue = useCallback(async (dialogue) => {
+    setPendingDialogue(dialogue);
     setSendError("");
-    if (!inCall) {
-      await startCall();
-      return;
-    }
-
-    const dialogue = toDialoguePayload(history);
-    endCall();
     setIsSubmitting(true);
     try {
       await handoffCounselingSession(childProfileId, counselingSessionId, dialogue);
+      setPendingDialogue(null);
       navigate(detailPath, { replace: true });
     } catch (caught) {
       setSendError(getErrorMessage(caught));
     } finally {
       setIsSubmitting(false);
     }
+  }, [childProfileId, counselingSessionId, detailPath, navigate]);
+  const handleAgentEnded = useCallback((callHistory) => {
+    void submitDialogue(toDialoguePayload(callHistory));
+  }, [submitDialogue]);
+  const { status, error, history, nearbySpeech, startCall, endCall } = useChildVoiceCall({ onEnded: handleAgentEnded });
+  const inCall = status === "connected" || status === "speaking";
+  const voiceSessionReady = counselingDetail?.status === "RECORDING";
+  const utterances = history.filter(isUtterance);
+  const message =
+    sendError ||
+    error ||
+    (!hasValidSession ? "대화 세션 정보를 찾을 수 없습니다." : "") ||
+    (sessionError ? getErrorMessage(sessionError) : "") ||
+    (!isLoadingSession && !voiceSessionReady ? "상담을 시작한 후 음성 대화를 이용해 주세요." : "") ||
+    (!ready ? "이 브라우저에서는 음성 대화를 사용할 수 없습니다." : "");
+
+  async function handleCircleClick() {
+    if (!hasValidSession || !voiceSessionReady || isSubmitting) return;
+    setSendError("");
+    if (pendingDialogue) {
+      await submitDialogue(pendingDialogue);
+      return;
+    }
+    if (!inCall) {
+      await startCall();
+      return;
+    }
+
+    if (status === "speaking") return;
+
+    const dialogue = toDialoguePayload(history);
+    endCall();
+    await submitDialogue(dialogue);
   }
 
   const soundScale = nearbySpeech?.open ? Math.min(1.12, 1 + nearbySpeech.rms * 3) : 1;
@@ -80,17 +104,17 @@ export function VoiceTalkPage() {
 
       <button
         type="button"
-        disabled={!ready || !hasValidSession || isSubmitting || status === "connecting"}
+        disabled={!ready || !voiceSessionReady || isSubmitting || status === "connecting" || status === "speaking"}
         onClick={() => void handleCircleClick()}
-        aria-label={`${STATUS_LABEL[status]}. ${message}`.trim()}
-        title={message || STATUS_LABEL[status]}
+        aria-label={`${pendingDialogue ? "다시 전송" : STATUS_LABEL[status]}. ${message}`.trim()}
+        title={message || (pendingDialogue ? "다시 전송" : STATUS_LABEL[status])}
         className={`voice-orb voice-orb--${status}`}
         style={{ "--voice-scale": soundScale }}
       >
-        {STATUS_LABEL[status]}
+        {pendingDialogue ? "다시 전송" : STATUS_LABEL[status]}
       </button>
 
-      <p className="visually-hidden" aria-live="polite">{message || STATUS_LABEL[status]}</p>
+      <p className="visually-hidden" aria-live="polite">{message || (pendingDialogue ? "다시 전송" : STATUS_LABEL[status])}</p>
 
       {import.meta.env.DEV && (
         <section className="voice-transcript" aria-label="개발용 대화 전사">

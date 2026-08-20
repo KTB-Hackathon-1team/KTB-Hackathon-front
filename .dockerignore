@@ -5,3 +5,11 @@ dist
 Dockerfile
 .dockerignore
 npm-debug.log*
+.env*
+*.pem
+*.log
+coverage
+.vite
+.vercel
+outputs
+work
