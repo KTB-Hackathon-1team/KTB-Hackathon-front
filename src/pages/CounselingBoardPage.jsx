@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpenText,
-  ChevronRight,
   Compass,
   Ellipsis,
   Home,
@@ -256,7 +255,6 @@ export function CounselingBoardPage() {
                             </span>
                             <span className="session-card__action">
                               <span>기록 보기</span>
-                              <ChevronRight />
                             </span>
                           </CardContent>
                         </Card>
@@ -314,13 +312,6 @@ export function CounselingBoardPage() {
               )}
             </section>
 
-            <nav className="mobile-child-nav" aria-label="모바일 아이 공간 메뉴">
-              <span className="mobile-child-nav__item mobile-child-nav__item--active">
-                <Home />오늘
-              </span>
-              <span className="mobile-child-nav__item"><NotebookTabs />기록</span>
-              <span className="mobile-child-nav__item"><Compass />길잡이</span>
-            </nav>
           </section>
         </div>
       </div>
