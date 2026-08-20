@@ -1,16 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  AlertCircle,
-  ArrowRight,
-  Check,
-  Ellipsis,
-  Info,
-  LogOut,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
-import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
+import { AlertCircle, ArrowRight, Camera, Check, Ellipsis, Info, LogOut, Mars, Pencil, Plus, Trash2, Venus } from "lucide-react";
+import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";`
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import useSWR, { useSWRConfig } from "swr";
@@ -37,13 +27,6 @@ import {
 } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/Select";
 import { useAuth } from "@/hooks/useAuth";
 import { useChild } from "@/hooks/useChild";
 import { getAge } from "@/utils/date";
@@ -102,6 +85,7 @@ export function DashboardPage() {
     register,
     reset,
     setError,
+    watch,
     formState: { errors },
   } = useForm({ defaultValues: { name: "", birthDate: "", gender: "" } });
   const {
@@ -112,12 +96,25 @@ export function DashboardPage() {
     setError: setEditError,
     formState: { errors: editErrors },
   } = useForm({ defaultValues: { name: "", birthDate: "", gender: "" } });
+  const profileImageFile = watch("profileImage")?.[0];
+  const [profileImagePreview, setProfileImagePreview] = useState("");
 
   useEffect(() => {
     if (children.length && !children.some((child) => child.id === selectedChildId)) {
       selectChild(children[0].id);
     }
   }, [children, selectChild, selectedChildId]);
+
+  useEffect(() => {
+    if (!profileImageFile) {
+      setProfileImagePreview("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(profileImageFile);
+    setProfileImagePreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [profileImageFile]);
 
   const handleRegister = useCallback(async (data) => {
     clearErrors("root");
@@ -355,7 +352,7 @@ export function DashboardPage() {
               <CardContent>
                 <span>
                   {selectedChild ? (
-                    <><strong>{selectedChild.name}</strong>이를 선택했어요</>
+                    <><strong>{selectedChild.name}</strong>(이)를 선택했어요</>
                   ) : (
                     "먼저 아이를 선택해 주세요"
                   )}
@@ -363,9 +360,9 @@ export function DashboardPage() {
                 <Button
                   className="selection-panel__button"
                   disabled={!selectedChild}
-                  onClick={() => selectedChild && navigate("/talk")}
+                  onClick={() => selectedChild && navigate(`/children/${selectedChild.id}/counseling`)}
                 >
-                  {selectedChild ? `${selectedChild.name}이와 시작하기` : "아이 선택하기"}
+                  {selectedChild ? `${selectedChild.name}(이)의 상담 공간으로 가기` : "아이 선택하기"}
                   <ArrowRight />
                 </Button>
               </CardContent>
@@ -396,6 +393,38 @@ export function DashboardPage() {
             </DialogDescription>
           </DialogHeader>
           <form className="child-form" onSubmit={handleSubmit(handleRegister)} noValidate>
+            <div className="form-field child-form__avatar-field">
+              <Label>프로필 사진 <span className="child-form__optional">(선택)</span></Label>
+              <label className="child-form__avatar-picker" htmlFor="child-image">
+                <Avatar className="child-form__avatar-preview" size="lg">
+                  <AvatarImage src={profileImagePreview || undefined} alt="선택한 프로필 사진 미리보기" />
+                  <AvatarFallback><Camera aria-hidden="true" /></AvatarFallback>
+                </Avatar>
+                <span className="child-form__avatar-badge"><Camera aria-hidden="true" /></span>
+                <span className="child-form__avatar-hint">
+                  {profileImageFile ? "사진 변경" : "사진 선택"}
+                </span>
+              </label>
+              <Input
+                id="child-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                aria-invalid={Boolean(errors.profileImage)}
+                className="child-form__file-input"
+                {...register("profileImage", {
+                  validate: (files) => {
+                    const image = files?.[0];
+                    if (!image) return true;
+                    if (!ALLOWED_IMAGE_TYPES.includes(image.type)) {
+                      return "프로필 사진은 JPEG, PNG, WebP 형식만 사용할 수 있어요.";
+                    }
+                    return image.size <= MAX_IMAGE_SIZE || "프로필 사진은 5MB 이하로 선택해 주세요.";
+                  },
+                })}
+              />
+              {errors.profileImage && <p className="form-field__error">{errors.profileImage.message}</p>}
+            </div>
+
             <div className="form-field">
               <Label htmlFor="child-name">이름</Label>
               <Input
@@ -437,46 +466,37 @@ export function DashboardPage() {
                 control={control}
                 rules={{ required: "성별을 선택해 주세요." }}
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger
-                      className="child-form__select"
-                      aria-invalid={Boolean(errors.gender)}
+                  <div
+                    className="child-form__gender-options"
+                    role="radiogroup"
+                    aria-label="성별"
+                    aria-invalid={Boolean(errors.gender)}
+                  >
+                    <button
+                      type="button"
+                      className="child-form__gender-option child-form__gender-option--male"
+                      role="radio"
+                      aria-checked={field.value === "MALE"}
                       ref={field.ref}
+                      onClick={() => field.onChange("MALE")}
                     >
-                      <SelectValue placeholder="선택해 주세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="MALE">남아</SelectItem>
-                      <SelectItem value="FEMALE">여아</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <Mars aria-hidden="true" />
+                      <span>남아</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="child-form__gender-option child-form__gender-option--female"
+                      role="radio"
+                      aria-checked={field.value === "FEMALE"}
+                      onClick={() => field.onChange("FEMALE")}
+                    >
+                      <Venus aria-hidden="true" />
+                      <span>여아</span>
+                    </button>
+                  </div>
                 )}
               />
               {errors.gender && <p className="form-field__error">{errors.gender.message}</p>}
-            </div>
-
-            <div className="form-field">
-              <Label htmlFor="child-image">
-                프로필 사진 <span className="child-form__optional">(선택)</span>
-              </Label>
-              <Input
-                id="child-image"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                aria-invalid={Boolean(errors.profileImage)}
-                className="child-form__file"
-                {...register("profileImage", {
-                  validate: (files) => {
-                    const image = files?.[0];
-                    if (!image) return true;
-                    if (!ALLOWED_IMAGE_TYPES.includes(image.type)) {
-                      return "프로필 사진은 JPEG, PNG, WebP 형식만 사용할 수 있어요.";
-                    }
-                    return image.size <= MAX_IMAGE_SIZE || "프로필 사진은 5MB 이하로 선택해 주세요.";
-                  },
-                })}
-              />
-              {errors.profileImage && <p className="form-field__error">{errors.profileImage.message}</p>}
             </div>
 
             <Alert className="child-form__info">
