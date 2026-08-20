@@ -4,12 +4,14 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpenText,
-  ChevronRight,
   Compass,
+  Ellipsis,
   Home,
   MessageCircleHeart,
   NotebookTabs,
+  Trash2,
 } from "lucide-react";
+import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import { Link, useNavigate, useParams } from "react-router";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
@@ -18,9 +20,11 @@ import { CHILDREN_KEY } from "@/api/childrenApi";
 import {
   counselingSessionsKey,
   createCounselingSession,
+  deleteCounselingSession,
 } from "@/api/counselingApi";
 import { Brand } from "@/components/Brand";
 import { CounselingCreateModal } from "@/components/modals/CounselingCreateModal";
+import { CounselingDeleteModal } from "@/components/modals/CounselingDeleteModal";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -43,6 +47,9 @@ export function CounselingBoardPage() {
   const { selectChild } = useChild();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createError, setCreateError] = useState("");
+  const [deletingSession, setDeletingSession] = useState(null);
+  const [isDeletingSession, setIsDeletingSession] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const {
     data: children,
@@ -109,6 +116,22 @@ export function CounselingBoardPage() {
       setCreateError(getErrorMessage(error));
     }
   }, [childProfileId, createSession, mutateSessions, navigate]);
+
+  const handleDelete = useCallback(async () => {
+    if (!deletingSession) return;
+    setDeleteError("");
+    setIsDeletingSession(true);
+
+    try {
+      await deleteCounselingSession(childProfileId, deletingSession.id);
+      await mutateSessions();
+      setDeletingSession(null);
+    } catch (error) {
+      setDeleteError(getErrorMessage(error));
+    } finally {
+      setIsDeletingSession(false);
+    }
+  }, [childProfileId, deletingSession, mutateSessions]);
 
   if (!isValidChildId) {
     return <InvalidChildState message="올바르지 않은 아이 주소입니다." />;
@@ -217,26 +240,57 @@ export function CounselingBoardPage() {
               ) : sessions.length ? (
                 <div className="session-list">
                   {sessions.map((session) => (
-                    <Link
-                      key={session.id}
-                      to={`/children/${childProfileId}/counseling/${session.id}`}
-                      className="session-list__link"
-                    >
-                      <Card className="session-card">
-                        <CardContent>
-                          <span className="session-card__icon"><BookOpenText /></span>
-                          <span className="session-card__body">
-                            <span className="session-card__date">{formatDate(session.date)}</span>
-                            <strong>{session.title}</strong>
-                            <span className="session-card__summary">{session.content}</span>
-                          </span>
-                          <span className="session-card__action">
-                            <span>기록 보기</span>
-                            <ChevronRight />
-                          </span>
-                        </CardContent>
-                      </Card>
-                    </Link>
+                    <div className="session-list__item" key={session.id}>
+                      <Link
+                        to={`/children/${childProfileId}/counseling/${session.id}`}
+                        className="session-list__link"
+                      >
+                        <Card className="session-card">
+                          <CardContent>
+                            <span className="session-card__icon"><BookOpenText /></span>
+                            <span className="session-card__body">
+                              <span className="session-card__date">{formatDate(session.date)}</span>
+                              <strong>{session.title}</strong>
+                              <span className="session-card__summary">{session.content}</span>
+                            </span>
+                            <span className="session-card__action">
+                              <span>기록 보기</span>
+                            </span>
+                          </CardContent>
+                        </Card>
+                      </Link>
+
+                      <DropdownMenuPrimitive.Root>
+                        <DropdownMenuPrimitive.Trigger asChild>
+                          <Button
+                            className="session-card__menu"
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`${session.title} 상담 기록 관리`}
+                          >
+                            <Ellipsis />
+                          </Button>
+                        </DropdownMenuPrimitive.Trigger>
+                        <DropdownMenuPrimitive.Portal>
+                          <DropdownMenuPrimitive.Content
+                            className="session-menu"
+                            align="end"
+                            sideOffset={6}
+                          >
+                            <DropdownMenuPrimitive.Item
+                              className="session-menu__item session-menu__item--destructive"
+                              onSelect={() => {
+                                setDeleteError("");
+                                setDeletingSession(session);
+                              }}
+                            >
+                              <Trash2 /> 삭제
+                            </DropdownMenuPrimitive.Item>
+                          </DropdownMenuPrimitive.Content>
+                        </DropdownMenuPrimitive.Portal>
+                      </DropdownMenuPrimitive.Root>
+                    </div>
                   ))}
                 </div>
               ) : !sessionsError ? (
@@ -258,13 +312,6 @@ export function CounselingBoardPage() {
               )}
             </section>
 
-            <nav className="mobile-child-nav" aria-label="모바일 아이 공간 메뉴">
-              <span className="mobile-child-nav__item mobile-child-nav__item--active">
-                <Home />오늘
-              </span>
-              <span className="mobile-child-nav__item"><NotebookTabs />기록</span>
-              <span className="mobile-child-nav__item"><Compass />길잡이</span>
-            </nav>
           </section>
         </div>
       </div>
@@ -276,6 +323,14 @@ export function CounselingBoardPage() {
         error={createError}
         onSubmit={handleCreate}
         onClose={() => setIsCreateOpen(false)}
+      />
+
+      <CounselingDeleteModal
+        session={deletingSession}
+        isDeleting={isDeletingSession}
+        error={deleteError}
+        onConfirm={() => void handleDelete()}
+        onClose={() => setDeletingSession(null)}
       />
     </main>
   );
