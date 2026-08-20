@@ -31,3 +31,9 @@ export function handoffCounselingSession(childProfileId, sessionId, payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export function deleteCounselingSession(childProfileId, sessionId) {
+  return apiRequest(counselingDetailKey(childProfileId, sessionId), {
+    method: "DELETE",
+  });
+}
