@@ -27,8 +27,8 @@ export function CounselingDeleteModal({
     >
       <DialogContent className="counseling-delete-dialog" showCloseButton={!isDeleting}>
         <DialogHeader>
-          <span className="counseling-delete-dialog__eyebrow">상담 기록 관리</span>
-          <DialogTitle className="counseling-delete-dialog__title">상담 기록 삭제</DialogTitle>
+          <span className="counseling-delete-dialog__eyebrow">기록 관리</span>
+          <DialogTitle className="counseling-delete-dialog__title">기록 삭제</DialogTitle>
           <DialogDescription>
             ‘{session?.title}’ 기록과 연결된 대화, 분석 결과, 녹음 정보가 모두 삭제되며 되돌릴 수 없어요.
           </DialogDescription>

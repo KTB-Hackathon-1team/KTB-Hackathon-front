@@ -204,7 +204,7 @@ export function CounselingBoardPage() {
             <Card className="new-counseling-card">
               <CardContent>
                 <div>
-                  <CardTitle>새로운 상담 시작하기</CardTitle>
+                  <CardTitle>새로운 대화 시작하기</CardTitle>
                   <CardDescription>
                     갈등 상황을 먼저 남기고, 아이와 대화할 준비를 시작해요.
                   </CardDescription>
@@ -224,8 +224,8 @@ export function CounselingBoardPage() {
 
             <section className="session-section" aria-labelledby="recent-counseling-title">
               <header>
-                <h2 id="recent-counseling-title">최근 상담 기록</h2>
-                <p>{child.name}이와 나눈 상담 상황을 최신순으로 확인할 수 있어요.</p>
+                <h2 id="recent-counseling-title">최근 대화 기록</h2>
+                <p>{child.name}이와 나눈 대화를 최신순으로 확인할 수 있어요.</p>
               </header>
 
               {sessionsError && (
@@ -297,7 +297,7 @@ export function CounselingBoardPage() {
                 <Card className="session-empty">
                   <CardContent>
                     <span className="session-empty__icon"><NotebookTabs /></span>
-                    <strong>아직 상담 기록이 없어요</strong>
+                    <strong>아직 기록이 없어요</strong>
                     <p>첫 번째 상황을 남기면 이곳에 기록이 쌓여요.</p>
                   </CardContent>
                 </Card>

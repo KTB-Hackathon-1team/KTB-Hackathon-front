@@ -40,7 +40,7 @@ export function VoiceTalkPage() {
   const message =
     sendError ||
     error ||
-    (!hasValidSession ? "상담 세션 정보를 찾을 수 없습니다." : "") ||
+    (!hasValidSession ? "대화 세션 정보를 찾을 수 없습니다." : "") ||
     (!ready ? "이 브라우저에서는 음성 대화를 사용할 수 없습니다." : "");
 
   async function handleCircleClick() {

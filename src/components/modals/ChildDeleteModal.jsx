@@ -24,7 +24,7 @@ export function ChildDeleteModal({ child, isDeleting, error, onConfirm, onClose 
           <span className="child-delete-dialog__eyebrow">프로필 관리</span>
           <DialogTitle className="child-delete-dialog__title">아이 프로필 삭제</DialogTitle>
           <DialogDescription>
-            {child?.name}이의 프로필과 연결된 상담 기록, 대화, 분석 결과가 모두 삭제되며 되돌릴 수 없어요.
+            {child?.name}이의 프로필과 연결된 기록, 대화, 분석 결과가 모두 삭제되며 되돌릴 수 없어요.
           </DialogDescription>
         </DialogHeader>
 

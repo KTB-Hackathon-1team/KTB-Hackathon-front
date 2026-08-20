@@ -296,7 +296,7 @@ export function DashboardPage() {
                   disabled={!selectedChild}
                   onClick={() => selectedChild && navigate(`/children/${selectedChild.id}/counseling`)}
                 >
-                  {selectedChild ? `${selectedChild.name}(이)의 상담 공간으로 가기` : "아이 선택하기"}
+                  {selectedChild ? `${selectedChild.name}(이)의 대화 공간으로 가기` : "아이 선택하기"}
                   <ArrowRight />
                 </Button>
               </CardContent>

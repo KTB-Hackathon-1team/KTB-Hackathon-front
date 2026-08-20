@@ -52,31 +52,6 @@ export function useChildVoiceCall() {
     setStatus("idle");
   }, []);
 
-  const hangupTool = useMemo(
-    () =>
-      tool({
-        name: "hang_up",
-        description: `
-          Call this tool BEFORE your final goodbye when you decide
-          the conversation should end or the user wants to leave.
-          After this tool returns, say one short final goodbye.
-        `,
-        parameters: {
-          type: "object",
-          properties: {},
-          required: [],
-          additionalProperties: false,
-        },
-        execute: async () => {
-          hangupRequestedRef.current = true;
-          farewellStartedRef.current = false;
-
-          return "Hangup requested. Say your final goodbye now.";
-        },
-      }),
-    [],
-  );
-
   useEffect(() => () => endCall(), [endCall]);
 
   const startCall = useCallback(async () => {
@@ -95,6 +70,26 @@ export function useChildVoiceCall() {
       const rawMic = await openChildMicrophone();
       const nearby = await openNearbySpeechInput(rawMic, setNearbySpeech);
       micStopRef.current = nearby.stop;
+      const hangupTool = tool({
+        name: "hang_up",
+        description: `
+          Call this tool BEFORE your final goodbye when you decide
+          the conversation should end or the user wants to leave.
+          After this tool returns, say one short final goodbye.
+        `,
+        parameters: {
+          type: "object",
+          properties: {},
+          required: [],
+          additionalProperties: false,
+        },
+        execute: async () => {
+          hangupRequestedRef.current = true;
+          farewellStartedRef.current = false;
+
+          return "Hangup requested. Say your final goodbye now.";
+        },
+      });
 
       const session = new RealtimeSession(
         new RealtimeAgent({
@@ -145,7 +140,7 @@ export function useChildVoiceCall() {
       setError(errorMessage(caught));
       setStatus("error");
     }
-  }, [endCall, hangupTool]);
+  }, [endCall]);
 
   return { status, error, history, nearbySpeech, startCall, endCall };
 }
