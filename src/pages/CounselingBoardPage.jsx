@@ -9,7 +9,6 @@ import {
   Home,
   MessageCircleHeart,
   NotebookTabs,
-  Plus,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import useSWR from "swr";
@@ -21,6 +20,7 @@ import {
   createCounselingSession,
 } from "@/api/counselingApi";
 import { Brand } from "@/components/Brand";
+import { CounselingCreateModal } from "@/components/modals/CounselingCreateModal";
 import { Alert, AlertDescription } from "@/components/ui/Alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -30,17 +30,6 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/Card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/Dialog";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
-import { Textarea } from "@/components/ui/Textarea";
 import { useChild } from "@/hooks/useChild";
 import { formatDate, getAge } from "@/utils/date";
 import { getErrorMessage } from "@/utils/errors";
@@ -256,9 +245,6 @@ export function CounselingBoardPage() {
                     <span className="session-empty__icon"><NotebookTabs /></span>
                     <strong>아직 상담 기록이 없어요</strong>
                     <p>첫 번째 상황을 남기면 이곳에 기록이 쌓여요.</p>
-                    <Button variant="outline" onClick={() => setIsCreateOpen(true)}>
-                      <Plus /> 첫 이야기 작성하기
-                    </Button>
                   </CardContent>
                 </Card>
               ) : null}
@@ -283,61 +269,14 @@ export function CounselingBoardPage() {
         </div>
       </div>
 
-      <Dialog
+      <CounselingCreateModal
         open={isCreateOpen}
-        onOpenChange={(open) => !isMutating && setIsCreateOpen(open)}
-      >
-        <DialogContent className="counseling-dialog">
-          <DialogHeader>
-            <span className="counseling-dialog__eyebrow">새로운 상담</span>
-            <DialogTitle className="counseling-dialog__title">어떤 일이 있었나요?</DialogTitle>
-            <DialogDescription>
-              상황을 편하게 적어주시면 {child.name}이에게 맞는 상담을 준비할게요.
-            </DialogDescription>
-          </DialogHeader>
-          <form className="counseling-form" onSubmit={handleCreate}>
-            <div className="form-field">
-              <Label htmlFor="counseling-title">상황 제목</Label>
-              <Input
-                id="counseling-title"
-                name="title"
-                maxLength={200}
-                required
-                placeholder="예: 학원 숙제 때문에 갈등이 생겼어요"
-              />
-            </div>
-            <div className="form-field">
-              <Label htmlFor="counseling-content">자세한 내용</Label>
-              <Textarea
-                id="counseling-content"
-                name="content"
-                required
-                className="counseling-form__textarea"
-                placeholder="오늘 있었던 상황과 서로 나눈 말을 편하게 적어주세요."
-              />
-            </div>
-            {createError && (
-              <Alert variant="destructive">
-                <AlertCircle />
-                <AlertDescription>{createError}</AlertDescription>
-              </Alert>
-            )}
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isMutating}
-                onClick={() => setIsCreateOpen(false)}
-              >
-                취소
-              </Button>
-              <Button type="submit" disabled={isMutating} className="counseling-form__submit">
-                {isMutating ? "만드는 중..." : "상담 만들기"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        childName={child.name}
+        isSubmitting={isMutating}
+        error={createError}
+        onSubmit={handleCreate}
+        onClose={() => setIsCreateOpen(false)}
+      />
     </main>
   );
 }

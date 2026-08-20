@@ -1,0 +1,34 @@
+.counseling-dialog {
+  border-color: #eadfd8;
+  background: #fffdfb;
+}
+
+.counseling-dialog__eyebrow {
+  color: #a8623e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.counseling-dialog__title {
+  color: #342721;
+  font-size: 1.875rem;
+  letter-spacing: -0.05em;
+}
+
+.counseling-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.counseling-form .ui-input,
+.counseling-form .ui-textarea {
+  background: white;
+}
+
+.counseling-form .ui-input { height: 2.75rem; }
+.counseling-form__textarea { min-height: 9rem; }
+.counseling-form__submit { background: #75432f; color: white; }
+.counseling-form__submit:hover { background: #5f3525; }
