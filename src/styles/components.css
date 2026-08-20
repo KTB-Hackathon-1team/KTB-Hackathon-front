@@ -315,7 +315,9 @@
 .password-field { position: relative; }
 .password-field__input { padding-right: 3rem; }
 .password-field__toggle { position: absolute; top: 50%; right: 0.25rem; transform: translateY(-50%); color: #79685f; }
-.password-field__toggle:active { transform: translateY(-50%); }
+.ui-button.password-field__toggle:hover,
+.ui-button.password-field__toggle:active { background: transparent; }
+.ui-button.password-field__toggle:active { transform: translateY(-50%); }
 
 @media (min-width: 640px) {
   .ui-dialog__footer { flex-direction: row; justify-content: flex-end; }

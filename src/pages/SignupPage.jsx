@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import { AlertCircle, Eye, EyeOff, Info } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { ApiError } from "@/api/apiClient";
 import { AuthLayout } from "@/components/AuthLayout";
@@ -9,12 +9,10 @@ import { Button } from "@/components/ui/Button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/Card";
-import { Checkbox } from "@/components/ui/Checkbox";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,12 +24,11 @@ export function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const {
-    control,
     getValues,
     handleSubmit,
     register,
     formState: { errors, isSubmitting },
-  } = useForm({ defaultValues: { terms: false } });
+  } = useForm({ mode: "onBlur" });
 
   const onSubmit = useCallback(async ({ loginId, nickname, password }) => {
     setMessage("");
@@ -49,9 +46,6 @@ export function SignupPage() {
         <CardHeader className="auth-card__header signup-page__header">
           <span className="auth-card__eyebrow">부모 계정</span>
           <CardTitle className="auth-card__title signup-page__title">회원가입</CardTitle>
-          <CardDescription className="auth-card__description">
-            아이 프로필은 가입 후 연결할 수 있어요.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <form
@@ -64,7 +58,6 @@ export function SignupPage() {
               <Input
                 id="signup-id"
                 autoComplete="username"
-                placeholder="사용할 아이디를 입력해 주세요"
                 aria-invalid={Boolean(errors.loginId)}
                 className="signup-form__input"
                 {...register("loginId", {
@@ -80,7 +73,6 @@ export function SignupPage() {
               <Input
                 id="signup-nickname"
                 autoComplete="nickname"
-                placeholder="부모님을 부를 이름"
                 aria-invalid={Boolean(errors.nickname)}
                 className="signup-form__input"
                 {...register("nickname", {
@@ -98,7 +90,6 @@ export function SignupPage() {
                   id="signup-password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  placeholder="영문·숫자 포함 8자 이상"
                   aria-invalid={Boolean(errors.password)}
                   className="signup-form__input password-field__input"
                   {...register("password", {
@@ -129,7 +120,6 @@ export function SignupPage() {
                 id="signup-confirm"
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
-                placeholder="비밀번호를 한 번 더 입력해 주세요"
                 aria-invalid={Boolean(errors.confirmPassword)}
                 className="signup-form__input"
                 {...register("confirmPassword", {
@@ -139,36 +129,6 @@ export function SignupPage() {
               {errors.confirmPassword && (
                 <p className="form-field__error">{errors.confirmPassword.message}</p>
               )}
-            </div>
-
-            <Alert className="signup-form__info">
-              <Info />
-              <AlertDescription>
-                <strong>아이 프로필은 나중에 연결할 수 있어요</strong>
-                <span>가입 단계에서는 아이의 개인정보를 받지 않아요.</span>
-              </AlertDescription>
-            </Alert>
-
-            <div className="terms-field">
-              <Controller
-                name="terms"
-                control={control}
-                rules={{ validate: (value) => value || "필수 약관에 동의해 주세요." }}
-                render={({ field }) => (
-                  <Checkbox
-                    id="terms"
-                    checked={field.value}
-                    onCheckedChange={(checked) => field.onChange(checked === true)}
-                    aria-invalid={Boolean(errors.terms)}
-                  />
-                )}
-              />
-              <div>
-                <Label htmlFor="terms" className="terms-field__label">
-                  <strong>필수</strong>이용약관 및 개인정보처리방침에 동의합니다.
-                </Label>
-                {errors.terms && <p className="form-field__error terms-field__error">{errors.terms.message}</p>}
-              </div>
             </div>
 
             {message && (
